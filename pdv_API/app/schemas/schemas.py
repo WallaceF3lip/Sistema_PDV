@@ -156,3 +156,72 @@ class SaleOut(BaseModel):
     payments: list[PaymentOut] = []
 
     model_config = {"from_attributes": True}
+
+
+# ─── Cash Register ───────────────────────────────────────────────────────────
+
+from app.models.cash_register import CashRegisterStatusEnum, CashMovementTypeEnum
+
+
+class CashRegisterOpen(BaseModel):
+    opening_amount: Decimal = Field(ge=0, decimal_places=2)
+    notes: Optional[str] = Field(None, max_length=255)
+
+
+class CashMovementCreate(BaseModel):
+    amount: Decimal = Field(gt=0, decimal_places=2)
+    description: str = Field(min_length=3, max_length=255)
+
+
+class CashRegisterClose(BaseModel):
+    closing_amount: Decimal = Field(ge=0, decimal_places=2)
+    notes: Optional[str] = Field(None, max_length=255)
+
+
+class CashMovementOut(BaseModel):
+    id: int
+    type: CashMovementTypeEnum
+    amount: Decimal
+    description: Optional[str]
+    user_id: int
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class CashRegisterOut(BaseModel):
+    id: int
+    user_id: int
+    status: CashRegisterStatusEnum
+    opening_amount: Decimal
+    closing_amount: Optional[Decimal]
+    current_balance: Decimal = Decimal("0")
+    expected_balance: Optional[Decimal] = None
+    difference: Optional[Decimal] = None
+    opened_at: datetime
+    closed_at: Optional[datetime]
+    notes: Optional[str]
+    movements: list[CashMovementOut] = []
+
+    model_config = {"from_attributes": True}
+
+    @model_validator(mode="after")
+    def compute_balance(self):
+        """Calcula saldo corrente e, se fechado, diferença entre contagem e sistema."""
+        balance = Decimal("0")
+        inflows = {CashMovementTypeEnum.OPENING, CashMovementTypeEnum.SALE, CashMovementTypeEnum.SUPRIMENTO}
+        outflows = {CashMovementTypeEnum.SANGRIA}
+        for m in self.movements:
+            if m.type in inflows:
+                balance += m.amount
+            elif m.type in outflows:
+                balance -= m.amount
+            # CLOSING é apenas registro da contagem física — não afeta saldo
+        self.current_balance = balance
+
+        if self.status == CashRegisterStatusEnum.CLOSED and self.closing_amount is not None:
+            self.expected_balance = balance
+            self.difference = self.closing_amount - balance
+
+        return self
+
