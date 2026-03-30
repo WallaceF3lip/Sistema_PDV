@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SaleService } from '../../core/services/sale.service';
@@ -194,11 +194,15 @@ export class SalesComponent implements OnInit {
   constructor(
     private saleService: SaleService,
     private productService: ProductService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    this.productService.list().subscribe((products) => (this.products = products));
+    this.productService.list().subscribe((products) => {
+      this.products = products;
+      this.cdr.detectChanges();
+    });
   }
 
   addBySku(): void {
@@ -232,14 +236,20 @@ export class SalesComponent implements OnInit {
     this.saleService
       .addItem(this.currentSale.id, { sku: product.sku, quantity: 1 })
       .subscribe({
-        next: (sale) => (this.currentSale = sale),
+        next: (sale) => {
+          this.currentSale = sale;
+          this.cdr.detectChanges();
+        },
       });
   }
 
   removeItem(item: SaleItem): void {
     if (!this.currentSale) return;
     this.saleService.removeItem(this.currentSale.id, item.id).subscribe({
-      next: (sale) => (this.currentSale = sale),
+      next: (sale) => {
+        this.currentSale = sale;
+        this.cdr.detectChanges();
+      } ,
     });
   }
 

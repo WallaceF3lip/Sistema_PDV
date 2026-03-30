@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CashRegisterService } from '../../core/services/cash-register.service';
@@ -199,7 +199,8 @@ export class CashRegisterComponent implements OnInit {
   constructor(
     private cashService: CashRegisterService,
     private toastService: ToastService,
-    private authService: AuthService
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -212,10 +213,12 @@ export class CashRegisterComponent implements OnInit {
       next: (reg) => {
         this.register = reg;
         this.isLoading = false;
+        this.cdr.detectChanges();
       },
       error: () => {
         this.register = null;
         this.isLoading = false;
+        this.cdr.detectChanges();
       },
     });
   }

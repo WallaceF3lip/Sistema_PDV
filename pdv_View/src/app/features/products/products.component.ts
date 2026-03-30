@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../core/services/product.service';
@@ -134,7 +134,8 @@ export class ProductsComponent implements OnInit {
   constructor(
     private productService: ProductService,
     private toastService: ToastService,
-    private authService: AuthService
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -147,8 +148,12 @@ export class ProductsComponent implements OnInit {
       next: (products) => {
         this.products = products;
         this.isLoading = false;
+        this.cdr.detectChanges();
       },
-      error: () => (this.isLoading = false),
+      error: () => {
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
     });
   }
 

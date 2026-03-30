@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UserService } from '../../core/services/user.service';
@@ -94,7 +94,8 @@ export class UsersComponent implements OnInit {
 
   constructor(
     private userService: UserService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -102,7 +103,10 @@ export class UsersComponent implements OnInit {
   }
 
   loadUsers(): void {
-    this.userService.list().subscribe((users) => (this.users = users));
+    this.userService.list().subscribe((users) => {
+      this.users = users;
+      this.cdr.detectChanges();
+    });
   }
 
   openModal(): void {
