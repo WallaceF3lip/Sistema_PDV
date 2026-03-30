@@ -1,0 +1,72 @@
+.stock {
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: var(--space-6);
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  &__empty {
+    text-align: center;
+    padding: var(--space-8);
+  }
+}
+
+.stock-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  padding: var(--space-4) var(--space-5);
+  min-height: 80px;
+  animation-fill-mode: both;
+
+  &__info {
+    flex: 2;
+  }
+
+  &__quantity {
+    min-width: 100px;
+    text-align: center;
+  }
+
+  &__actions {
+    display: flex;
+    gap: var(--space-2);
+  }
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 440px;
+  padding: var(--space-6);
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-top: var(--space-5);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+
+  label {
+    padding-left: var(--space-3);
+  }
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}

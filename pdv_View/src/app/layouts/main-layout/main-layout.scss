@@ -1,0 +1,17 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+
+  &__main {
+    flex: 1;
+    margin-left: 220px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  &__content {
+    flex: 1;
+    padding: 0 var(--space-8) var(--space-8);
+  }
+}
