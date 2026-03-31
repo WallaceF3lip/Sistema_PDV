@@ -6,26 +6,7 @@ import { AuthService } from '../../../core/services/auth.service';
   selector: 'app-header',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <header class="header">
-      <div class="header__left">
-        <h1 class="header__title headline-md">{{ pageTitle }}</h1>
-      </div>
-      <div class="header__right">
-        @if (user) {
-          <div class="header__user">
-            <div class="header__avatar">
-              {{ user.name.charAt(0).toUpperCase() }}
-            </div>
-            <div class="header__info">
-              <span class="header__name body-md">{{ user.name }}</span>
-              <span class="header__role label-sm">{{ user.role }}</span>
-            </div>
-          </div>
-        }
-      </div>
-    </header>
-  `,
+  templateUrl: './header.html',
   styleUrl: './header.scss',
 })
 export class HeaderComponent {

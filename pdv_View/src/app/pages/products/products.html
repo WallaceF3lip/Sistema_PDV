@@ -1,0 +1,96 @@
+<div class="products">
+    <div class="products__header">
+        <div>
+            <h2 class="headline-lg">Produtos</h2>
+            <p class="body-md text-muted">Gerencie o catálogo de produtos</p>
+        </div>
+        @if (isAdmin) {
+        <button class="btn btn-primary" (click)="openModal()">
+            + Novo Produto
+        </button>
+        }
+    </div>
+
+    <div class="products__list">
+        @for (product of products; track product.id; let i = $index) {
+        <div class="product-row card animate-slide-up" [style.animation-delay]="(i * 40) + 'ms'">
+            <div class="product-row__info">
+                <div class="product-row__sku label-sm text-muted">{{ product.sku }}</div>
+                <div class="product-row__name title-md">{{ product.name }}</div>
+            </div>
+            <div class="product-row__prices">
+                <span class="body-sm text-muted">Custo</span>
+                <span class="title-md">R$ {{ product.cost_price | number:'1.2-2' }}</span>
+            </div>
+            <div class="product-row__prices">
+                <span class="body-sm text-muted">Venda</span>
+                <span class="title-md text-accent">R$ {{ product.sale_price | number:'1.2-2' }}</span>
+            </div>
+            <div class="product-row__unit">
+                <span class="badge badge--muted">{{ product.unit }}</span>
+            </div>
+            <div class="product-row__status">
+                <div class="toggle" [class.active]="product.is_active" (click)="toggleProduct(product)"></div>
+            </div>
+            @if (isAdmin) {
+            <button class="btn btn-ghost" (click)="editProduct(product)">Editar</button>
+            }
+        </div>
+        }
+
+        @if (products.length === 0 && !isLoading) {
+        <div class="products__empty card">
+            <p class="body-lg text-muted">Nenhum produto cadastrado</p>
+        </div>
+        }
+    </div>
+</div>
+
+<!-- Modal -->
+@if (showModal) {
+<div class="glass-overlay" (click)="closeModal()">
+    <div class="modal-card card animate-scale-in" (click)="$event.stopPropagation()">
+        <h3 class="headline-md">{{ editingProduct ? 'Editar Produto' : 'Novo Produto' }}</h3>
+
+        <form class="modal-form" (ngSubmit)="saveProduct()">
+            @if (!editingProduct) {
+            <div class="form-group">
+                <label class="label-sm text-muted">SKU</label>
+                <input class="input-field" [(ngModel)]="form.sku" name="sku" placeholder="Ex: PROD001" required />
+            </div>
+            }
+            <div class="form-group">
+                <label class="label-sm text-muted">NOME</label>
+                <input class="input-field" [(ngModel)]="form.name" name="name" placeholder="Nome do produto" required />
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="label-sm text-muted">PREÇO DE CUSTO</label>
+                    <input class="input-field" type="number" step="0.01" [(ngModel)]="form.cost_price" name="cost_price"
+                        required />
+                </div>
+                <div class="form-group">
+                    <label class="label-sm text-muted">PREÇO DE VENDA</label>
+                    <input class="input-field" type="number" step="0.01" [(ngModel)]="form.sale_price" name="sale_price"
+                        required />
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="label-sm text-muted">UNIDADE</label>
+                <select class="input-field" [(ngModel)]="form.unit" name="unit">
+                    <option value="UN">Unidade (UN)</option>
+                    <option value="KG">Quilograma (KG)</option>
+                    <option value="LT">Litro (LT)</option>
+                </select>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
+                <button type="submit" class="btn btn-primary" [disabled]="isSaving">
+                    {{ isSaving ? 'Salvando...' : 'Salvar' }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+}

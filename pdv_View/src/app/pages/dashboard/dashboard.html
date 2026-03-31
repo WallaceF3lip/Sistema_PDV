@@ -1,0 +1,19 @@
+<div class="dashboard">
+    <div class="dashboard__intro animate-slide-up">
+        <h2 class="display-md">Painel de Controle</h2>
+        <p class="body-lg text-muted">
+            Selecione uma ação para começar a gerenciar.
+        </p>
+    </div>
+
+    <div class="dashboard__grid">
+        @for (card of visibleCards; track card.route; let i = $index) {
+        <a class="dashboard-card card animate-slide-up" [class.dashboard-card--highlighted]="card.highlighted"
+            [routerLink]="card.route" [style.animation-delay]="(i * 60) + 'ms'">
+            <span class="dashboard-card__icon">{{ card.icon }}</span>
+            <span class="dashboard-card__label headline-md">{{ card.label }}</span>
+            <span class="dashboard-card__desc body-sm text-muted">{{ card.description }}</span>
+        </a>
+        }
+    </div>
+</div>

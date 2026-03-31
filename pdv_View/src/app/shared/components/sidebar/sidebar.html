@@ -1,0 +1,29 @@
+
+    <aside class="sidebar">
+      <div class="sidebar__logo">
+        <span class="logo-icon">◆</span>
+        <span class="logo-text">PDV</span>
+      </div>
+
+      <nav class="sidebar__nav">
+        @for (item of visibleItems; track item.route) {
+          <a
+            class="nav-item"
+            [routerLink]="item.route"
+            routerLinkActive="nav-item--active"
+            [routerLinkActiveOptions]="{ exact: item.route === '/dashboard' }"
+          >
+            <span class="nav-item__icon material-icon">{{ item.icon }}</span>
+            <span class="nav-item__label">{{ item.label }}</span>
+          </a>
+        }
+      </nav>
+
+      <div class="sidebar__footer">
+        <button class="nav-item nav-item--logout" (click)="onLogout()">
+          <span class="nav-item__icon">⏻</span>
+          <span class="nav-item__label">Sair</span>
+        </button>
+      </div>
+    </aside>
+  
