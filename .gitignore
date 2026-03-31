@@ -45,3 +45,9 @@ Thumbs.db
 pdv_API/.venv/
 pdv_API/.env
 pdv_API/__pycache__/
+
+# PDV_View specific
+pdv_View/node_modules/
+pdv_View/dist/
+pdv_View/.angular/
+pdv_View/.env*
