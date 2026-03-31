@@ -1,1 +1,1 @@
-from app.routers import auth, users, products, stock, sales
+from app.routers import auth, users, products, stock, sales, cash_registers
