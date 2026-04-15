@@ -20,8 +20,13 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         message = 'Sem conexão com o servidor';
       } else if (error.status === 401) {
         message = 'Sessão expirada. Faça login novamente.';
-        auth.logout();
-        router.navigate(['/login']);
+        // Não fazer logout/redirect se a requisição for /auth/me
+        // pois o loadUser() do AuthService já trata esse cenário
+        const isAuthMeRequest = req.url.includes('/auth/me');
+        if (!isAuthMeRequest) {
+          auth.logout();
+          router.navigate(['/login']);
+        }
       } else if (error.status === 403) {
         message = 'Acesso negado';
       } else if (error.status === 404) {

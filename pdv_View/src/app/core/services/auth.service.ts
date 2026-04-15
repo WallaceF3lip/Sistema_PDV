@@ -19,7 +19,12 @@ export class AuthService {
     if (token) {
       this.me().subscribe({
         next: (user) => this.currentUserSubject.next(user),
-        error: () => this.logout(),
+        error: () => {
+          // Apenas limpar o usuário, sem remover o token.
+          // Se o token for realmente inválido, as próximas
+          // requisições receberão 401 e o interceptor tratará.
+          this.currentUserSubject.next(null);
+        },
       });
     }
   }

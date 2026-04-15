@@ -24,7 +24,8 @@ export class SidebarComponent {
     { icon: '☰', label: 'Produtos', route: '/products' },
     { icon: '▤', label: 'Estoque', route: '/stock' },
     { icon: '◈', label: 'Caixa', route: '/cash-register' },
-    { icon: '◉', label: 'Usuários', route: '/users', adminOnly: true },
+    { icon: '◉', label: 'Usuários', route: '/users' },
+    // { icon: '◉', label: 'Usuários', route: '/users', adminOnly: true },
   ];
 
   get visibleItems(): NavItem[] {
