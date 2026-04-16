@@ -23,10 +23,7 @@ export class StockComponent implements OnInit {
   modalType: 'in' | 'adjust' = 'in';
   selectedStock: Stock | null = null;
   adjustForm = { quantity: 0, reason: '' };
-
-  get isAdmin(): boolean {
-    return this.authService.isAdmin();
-  }
+  isAdmin = false;
 
   constructor(
     private stockService: StockService,
@@ -34,7 +31,12 @@ export class StockComponent implements OnInit {
     private toastService: ToastService,
     private authService: AuthService,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) {
+    this.authService.isAdmin$.subscribe((admin) => {
+      this.isAdmin = admin;
+      this.cdr.detectChanges();
+    });
+  }
 
   ngOnInit(): void {
     this.loadData();

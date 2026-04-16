@@ -22,17 +22,19 @@ export class CashRegisterComponent implements OnInit {
   showSuprimentoModal = false;
   showCloseModal = false;
   movementForm = { amount: 0, description: '' };
-
-  get isAdmin(): boolean {
-    return this.authService.isAdmin();
-  }
+  isAdmin = false;
 
   constructor(
     private cashService: CashRegisterService,
     private toastService: ToastService,
     private authService: AuthService,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) {
+    this.authService.isAdmin$.subscribe((admin) => {
+      this.isAdmin = admin;
+      this.cdr.detectChanges();
+    });
+  }
 
   ngOnInit(): void {
     this.loadRegister();

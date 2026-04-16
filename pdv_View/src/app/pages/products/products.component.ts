@@ -19,6 +19,7 @@ export class ProductsComponent implements OnInit {
   showModal = false;
   isSaving = false;
   editingProduct: Product | null = null;
+  isAdmin = false;
 
   form: any = {
     sku: '',
@@ -28,16 +29,17 @@ export class ProductsComponent implements OnInit {
     unit: 'UN',
   };
 
-  get isAdmin(): boolean {
-    return this.authService.isAdmin();
-  }
-
   constructor(
     private productService: ProductService,
     private toastService: ToastService,
     private authService: AuthService,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) {
+    this.authService.isAdmin$.subscribe((admin) => {
+      this.isAdmin = admin;
+      this.cdr.detectChanges();
+    });
+  }
 
   ngOnInit(): void {
     this.loadProducts();

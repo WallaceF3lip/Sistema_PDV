@@ -18,23 +18,28 @@ interface NavItem {
   styleUrl: './sidebar.scss',
 })
 export class SidebarComponent {
+  isAdmin = false;
+
   navItems: NavItem[] = [
     { icon: '▦', label: 'Dashboard', route: '/dashboard' },
     { icon: '◎', label: 'Vendas', route: '/sales' },
     { icon: '☰', label: 'Produtos', route: '/products' },
     { icon: '▤', label: 'Estoque', route: '/stock' },
     { icon: '◈', label: 'Caixa', route: '/cash-register' },
-    { icon: '◉', label: 'Usuários', route: '/users' },
-    // { icon: '◉', label: 'Usuários', route: '/users', adminOnly: true },
+    { icon: '◉', label: 'Usuários', route: '/users', adminOnly: true },
   ];
 
   get visibleItems(): NavItem[] {
     return this.navItems.filter(
-      (item) => !item.adminOnly || this.authService.isAdmin()
+      (item) => !item.adminOnly || this.isAdmin
     );
   }
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) {
+    this.authService.isAdmin$.subscribe((admin) => {
+      this.isAdmin = admin;
+    });
+  }
 
   onLogout(): void {
     this.authService.logout();
