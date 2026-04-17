@@ -64,7 +64,7 @@
             </div>
         </div>
 
-        @if (register.status === 'OPEN' && isAdmin) {
+        @if (register.status === 'OPEN' && authService.isAdmin()) {
         <div class="cash-register__actions animate-slide-up" style="animation-delay: 100ms">
             <button class="btn btn-outline btn-lg" (click)="showSangriaModal = true">
                 ↓ Sangria

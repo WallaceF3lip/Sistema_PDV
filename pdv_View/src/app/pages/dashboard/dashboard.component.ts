@@ -20,8 +20,6 @@ interface DashboardCard {
   styleUrl: './dashboard.scss',
 })
 export class DashboardComponent {
-  isAdmin = false;
-
   cards: DashboardCard[] = [
     {
       icon: '◎',
@@ -59,13 +57,10 @@ export class DashboardComponent {
 
   get visibleCards(): DashboardCard[] {
     return this.cards.filter(
-      (c) => !c.adminOnly || this.isAdmin
+      (c) => !c.adminOnly || this.authService.isAdmin()
     );
   }
 
-  constructor(private authService: AuthService) {
-    this.authService.isAdmin$.subscribe((admin) => {
-      this.isAdmin = admin;
-    });
-  }
+  constructor(protected authService: AuthService) {}
 }
+

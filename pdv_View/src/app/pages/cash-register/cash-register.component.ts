@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CashRegisterService } from '../../core/services/cash-register.service';
@@ -22,19 +22,13 @@ export class CashRegisterComponent implements OnInit {
   showSuprimentoModal = false;
   showCloseModal = false;
   movementForm = { amount: 0, description: '' };
-  isAdmin = false;
+
 
   constructor(
     private cashService: CashRegisterService,
     private toastService: ToastService,
-    private authService: AuthService,
-    private cdr: ChangeDetectorRef
-  ) {
-    this.authService.isAdmin$.subscribe((admin) => {
-      this.isAdmin = admin;
-      this.cdr.detectChanges();
-    });
-  }
+    protected authService: AuthService
+  ) {}
 
   ngOnInit(): void {
     this.loadRegister();
@@ -46,12 +40,10 @@ export class CashRegisterComponent implements OnInit {
       next: (reg) => {
         this.register = reg;
         this.isLoading = false;
-        this.cdr.detectChanges();
       },
       error: () => {
         this.register = null;
         this.isLoading = false;
-        this.cdr.detectChanges();
       },
     });
   }

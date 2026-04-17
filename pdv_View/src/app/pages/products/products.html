@@ -4,7 +4,7 @@
             <h2 class="headline-lg">Produtos</h2>
             <p class="body-md text-muted">Gerencie o catálogo de produtos</p>
         </div>
-        @if (isAdmin) {
+        @if (authService.isAdmin()) {
         <button class="btn btn-primary" (click)="openModal()">
             + Novo Produto
         </button>
@@ -12,7 +12,7 @@
     </div>
 
     <div class="products__list">
-        @for (product of products; track product.id; let i = $index) {
+        @for (product of products(); track product.id; let i = $index) {
         <div class="product-row card animate-slide-up" [style.animation-delay]="(i * 40) + 'ms'">
             <div class="product-row__info">
                 <div class="product-row__sku label-sm text-muted">{{ product.sku }}</div>
@@ -32,7 +32,7 @@
             <div class="product-row__status">
                 <div class="toggle" [class.active]="product.is_active" (click)="toggleProduct(product)"></div>
             </div>
-            @if (isAdmin) {
+            @if (authService.isAdmin()) {
             <button class="btn btn-ghost" (click)="editProduct(product)">Editar</button>
             }
         </div>

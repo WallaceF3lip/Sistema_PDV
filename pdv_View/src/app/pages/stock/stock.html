@@ -7,7 +7,7 @@
     </div>
 
     <div class="stock__list">
-        @for (item of stockItems; track item.id; let i = $index) {
+        @for (item of stockItems(); track item.id; let i = $index) {
         <div class="stock-row card animate-slide-up" [style.animation-delay]="(i * 40) + 'ms'">
             <div class="stock-row__info">
                 <div class="stock-row__name title-md">
@@ -22,7 +22,7 @@
                     {{ item.quantity }} {{ getProductUnit(item.product_id) }}
                 </span>
             </div>
-            @if (isAdmin) {
+            @if (authService.isAdmin()) {
             <div class="stock-row__actions">
                 <button class="btn btn-ghost" (click)="openAdjustModal(item, 'in')">+ Entrada</button>
                 <button class="btn btn-ghost" (click)="openAdjustModal(item, 'adjust')">Ajustar</button>

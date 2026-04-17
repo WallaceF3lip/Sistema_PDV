@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { StockService } from '../../core/services/stock.service';
@@ -15,7 +15,7 @@ import { Stock, StockMovement, Product } from '../../core/models';
   styleUrl: './stock.scss',
 })
 export class StockComponent implements OnInit {
-  stockItems: Stock[] = [];
+  stockItems = signal<Stock[]>([]);
   products: Product[] = [];
   isLoading = false;
   showModal = false;
@@ -23,20 +23,14 @@ export class StockComponent implements OnInit {
   modalType: 'in' | 'adjust' = 'in';
   selectedStock: Stock | null = null;
   adjustForm = { quantity: 0, reason: '' };
-  isAdmin = false;
+
 
   constructor(
     private stockService: StockService,
     private productService: ProductService,
     private toastService: ToastService,
-    private authService: AuthService,
-    private cdr: ChangeDetectorRef
-  ) {
-    this.authService.isAdmin$.subscribe((admin) => {
-      this.isAdmin = admin;
-      this.cdr.detectChanges();
-    });
-  }
+    protected authService: AuthService
+  ) {}
 
   ngOnInit(): void {
     this.loadData();
@@ -48,13 +42,11 @@ export class StockComponent implements OnInit {
       this.products = products;
       this.stockService.list().subscribe({
         next: (items) => {
-          this.stockItems = items;
+          this.stockItems.set(items);
           this.isLoading = false;
-          this.cdr.detectChanges();
         },
         error: () => {
           this.isLoading = false;
-          this.cdr.detectChanges();
         },
       });
     });

@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../core/services/product.service';
@@ -14,12 +14,12 @@ import { Product, ProductCreate, UnitEnum } from '../../core/models';
   styleUrl: './products.scss',
 })
 export class ProductsComponent implements OnInit {
-  products: Product[] = [];
+  products = signal<Product[]>([]);
   isLoading = false;
   showModal = false;
   isSaving = false;
   editingProduct: Product | null = null;
-  isAdmin = false;
+
 
   form: any = {
     sku: '',
@@ -32,14 +32,8 @@ export class ProductsComponent implements OnInit {
   constructor(
     private productService: ProductService,
     private toastService: ToastService,
-    private authService: AuthService,
-    private cdr: ChangeDetectorRef
-  ) {
-    this.authService.isAdmin$.subscribe((admin) => {
-      this.isAdmin = admin;
-      this.cdr.detectChanges();
-    });
-  }
+    protected authService: AuthService
+  ) {}
 
   ngOnInit(): void {
     this.loadProducts();
@@ -49,13 +43,11 @@ export class ProductsComponent implements OnInit {
     this.isLoading = true;
     this.productService.list(false).subscribe({
       next: (products) => {
-        this.products = products;
+        this.products.set(products);
         this.isLoading = false;
-        this.cdr.detectChanges();
       },
       error: () => {
         this.isLoading = false;
-        this.cdr.detectChanges();
       },
     });
   }
