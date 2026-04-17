@@ -1,4 +1,5 @@
 export const environment = {
-  production: false,
+  production: true,
   apiUrl: 'http://localhost:8000',
+  // apiUrl: 'http://wallace-stallos:8000',
 };

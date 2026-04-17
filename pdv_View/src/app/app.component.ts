@@ -12,4 +12,4 @@ import { ToastComponent } from './shared/components/toast/toast.component';
   `,
   styles: [],
 })
-export class App {}
+export class AppComponent {}

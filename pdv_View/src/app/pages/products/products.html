@@ -38,7 +38,7 @@
         </div>
         }
 
-        @if (products.length === 0 && !isLoading) {
+        @if (products().length === 0 && !isLoading) {
         <div class="products__empty card">
             <p class="body-lg text-muted">Nenhum produto cadastrado</p>
         </div>

@@ -31,7 +31,7 @@
         </div>
         }
 
-        @if (stockItems.length === 0 && !isLoading) {
+        @if (stockItems().length === 0 && !isLoading) {
         <div class="stock__empty card">
             <p class="body-lg text-muted">Nenhum item em estoque</p>
         </div>

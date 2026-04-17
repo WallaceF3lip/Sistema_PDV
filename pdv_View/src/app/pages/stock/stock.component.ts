@@ -5,7 +5,7 @@ import { StockService } from '../../core/services/stock.service';
 import { ProductService } from '../../core/services/product.service';
 import { ToastService } from '../../core/services/toast.service';
 import { AuthService } from '../../core/services/auth.service';
-import { Stock, StockMovement, Product } from '../../core/models';
+import { Stock, Product } from '../../core/models';
 
 @Component({
   selector: 'app-stock',
@@ -38,7 +38,7 @@ export class StockComponent implements OnInit {
 
   loadData(): void {
     this.isLoading = true;
-    this.productService.list(false).subscribe((products) => {
+    this.productService.list(true).subscribe((products) => {
       this.products = products;
       this.stockService.list().subscribe({
         next: (items) => {
