@@ -94,7 +94,8 @@ class StockOut(BaseModel):
 
 class StockAdjust(BaseModel):
     quantity: Decimal = Field(gt=0)
-    reason: str = Field(min_length=3, max_length=100)
+    min_quantity: Decimal # = Field(gt=0)
+    reason: str = Field(max_length=100)
 
 
 class StockMovementOut(BaseModel):
@@ -113,6 +114,9 @@ class StockMovementOut(BaseModel):
 
 class AddItemRequest(BaseModel):
     sku: str
+    quantity: Decimal = Field(gt=0, decimal_places=3)
+
+class UpdateItemRequest(BaseModel):
     quantity: Decimal = Field(gt=0, decimal_places=3)
 
 

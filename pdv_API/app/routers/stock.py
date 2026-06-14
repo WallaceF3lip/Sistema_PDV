@@ -57,6 +57,7 @@ def stock_adjust(
         db=db,
         product_id=product_id,
         new_quantity=payload.quantity,
+        new_min_quantity=payload.min_quantity,
         user_id=current_user.id,
         reason=payload.reason,
     )

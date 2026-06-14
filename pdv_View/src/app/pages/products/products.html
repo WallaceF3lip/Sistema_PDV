@@ -51,6 +51,7 @@
 <div class="glass-overlay" (click)="closeModal()">
     <div class="modal-card card animate-scale-in" (click)="$event.stopPropagation()">
         <h3 class="headline-md">{{ editingProduct ? 'Editar Produto' : 'Novo Produto' }}</h3>
+        <p>{{form.name}}</p>
 
         <form class="modal-form" (ngSubmit)="saveProduct()">
             @if (!editingProduct) {

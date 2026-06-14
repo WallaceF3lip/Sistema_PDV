@@ -110,7 +110,13 @@ class SaleService:
         item = next((i for i in sale.items if i.id == item_id), None)
         if not item:
             raise HTTPException(status_code=404, detail="Item não encontrado nessa venda")
-        db.delete(item)
+        
+        if item.quantity > 1:
+            item.quantity -= 1
+            item.subtotal = item.quantity * item.unit_price
+        else:
+            db.delete(item)
+            
         db.flush()
         db.refresh(sale)
         cls._recalculate_total(sale)

@@ -123,12 +123,12 @@
   }
 }
 
-.btn-remove {
+.btn- {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: rgba(224, 93, 83, 0.08);
-  color: var(--color-primary);
+  // background: rgba(224, 93, 83, 0.08);
+  // color: var(--color-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -139,6 +139,16 @@
   &:hover {
     background: var(--color-primary);
     color: #fff;
+  }
+  
+  & -remove {
+    background: rgba(224, 93, 83, 0.08);
+    color: var(--color-primary);
+  }
+
+  & -edit {
+    background: rgba(79, 112, 233, 0.08);
+    color: var(--color-primary);
   }
 }
 

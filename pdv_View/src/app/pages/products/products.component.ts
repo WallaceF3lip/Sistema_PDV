@@ -21,12 +21,12 @@ export class ProductsComponent implements OnInit {
   editingProduct: Product | null = null;
 
 
-  form: any = {
+  form: ProductCreate = {
     sku: '',
     name: '',
     cost_price: 0,
     sale_price: 0,
-    unit: 'UN',
+    unit: UnitEnum.UN,
   };
 
   constructor(
@@ -54,13 +54,14 @@ export class ProductsComponent implements OnInit {
 
   openModal(): void {
     this.editingProduct = null;
-    this.form = { sku: '', name: '', cost_price: 0, sale_price: 0, unit: 'UN' };
+    this.form = { sku: '', name: '', cost_price: 0, sale_price: 0, unit: UnitEnum.UN };
     this.showModal = true;
   }
 
   editProduct(product: Product): void {
     this.editingProduct = product;
     this.form = {
+      sku: product.sku,
       name: product.name,
       cost_price: product.cost_price,
       sale_price: product.sale_price,

@@ -1,3 +1,4 @@
+from app.schemas.schemas import UpdateItemRequest
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -52,6 +53,23 @@ def add_item(
         db=db,
         sale_id=sale_id,
         sku=payload.sku,
+        quantity=payload.quantity,
+    )
+
+# PUT - Atualizar o valor do item na venda
+@router.put("/{sale_id}/items/{item_id}", response_model=SaleOut)
+def update_item(
+    sale_id: int,
+    item_id: int,
+    payload: UpdateItemRequest,
+    db: Session = Depends(get_db),
+    _=Depends(get_current_user),
+):
+    """Atualiza o valor do item na venda."""
+    return SaleService.update_item(
+        db=db,
+        sale_id=sale_id,
+        item_id=item_id,
         quantity=payload.quantity,
     )
 

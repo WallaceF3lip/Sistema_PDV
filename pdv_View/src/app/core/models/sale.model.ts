@@ -1,3 +1,5 @@
+import { UnitEnum } from "./product.model";
+
 export enum SaleStatusEnum {
   OPEN = 'OPEN',
   PAID = 'PAID',

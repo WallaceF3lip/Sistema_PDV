@@ -97,11 +97,16 @@ class StockService:
         db: Session,
         product_id: int,
         new_quantity: Decimal,
+        new_min_quantity: Decimal,
         user_id: int,
         reason: str,
     ) -> Stock:
         """Ajuste manual — exclusivo ADMIN."""
         stock = cls.get_or_create(db, product_id)
+        
+        # Atualiza o min_quantity
+        stock.min_quantity = new_min_quantity
+
         old_qty = Decimal(str(stock.quantity))
         diff = new_quantity - old_qty
 

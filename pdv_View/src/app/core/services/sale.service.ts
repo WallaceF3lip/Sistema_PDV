@@ -28,6 +28,10 @@ export class SaleService {
     return this.http.post<Sale>(`${this.apiUrl}/${saleId}/items`, item);
   }
 
+  updateItem(saleId: number, itemId: number, quantity: number): Observable<Sale> {
+    return this.http.put<Sale>(`${this.apiUrl}/${saleId}/items/${itemId}`, quantity);
+  }
+
   removeItem(saleId: number, itemId: number): Observable<Sale> {
     return this.http.delete<Sale>(`${this.apiUrl}/${saleId}/items/${itemId}`);
   }

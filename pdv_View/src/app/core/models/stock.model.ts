@@ -20,6 +20,7 @@ export interface Stock {
 
 export interface StockAdjust {
   quantity: number;
+  min_quantity: number;
   reason: string;
 }
 

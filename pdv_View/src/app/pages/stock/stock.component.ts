@@ -5,7 +5,7 @@ import { StockService } from '../../core/services/stock.service';
 import { ProductService } from '../../core/services/product.service';
 import { ToastService } from '../../core/services/toast.service';
 import { AuthService } from '../../core/services/auth.service';
-import { Stock, Product } from '../../core/models';
+import { Stock, Product, StockAdjust } from '../../core/models';
 
 @Component({
   selector: 'app-stock',
@@ -22,7 +22,7 @@ export class StockComponent implements OnInit {
   isSaving = false;
   modalType: 'in' | 'adjust' = 'in';
   selectedStock: Stock | null = null;
-  adjustForm = { quantity: 0, reason: '' };
+  adjustForm: StockAdjust = { quantity: 0, min_quantity: 0, reason: '' }
 
 
   constructor(
@@ -57,7 +57,11 @@ export class StockComponent implements OnInit {
   openAdjustModal(stock: Stock, type: 'in' | 'adjust'): void {
     this.selectedStock = stock;
     this.modalType = type;
-    this.adjustForm = { quantity: 0, reason: '' };
+    this.adjustForm = { 
+      quantity: this.modalType === 'in' ? 1 : stock.quantity, 
+      min_quantity: stock.min_quantity,
+      reason: ''
+    };
     this.showModal = true;
   }
 
@@ -69,6 +73,12 @@ export class StockComponent implements OnInit {
   saveAdjust(): void {
     if (!this.selectedStock) return;
     this.isSaving = true;
+
+    if(this.adjustForm.reason === '' || this.adjustForm.reason === null){
+      this.toastService.error('Preencha o campo Motivo!');
+      this.isSaving = false;
+      return;
+    }
 
     const obs =
       this.modalType === 'in'
