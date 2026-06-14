@@ -1,3 +1,4 @@
+from app.services.stock_service import StockService
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -22,6 +23,19 @@ def create_product(
     db.add(product)
     db.commit()
     db.refresh(product)
+
+    # CRIA O ESTOQUE AUTOMATICAMENTE
+    stock = StockService.add_stock(
+        db=db,
+        product_id=product.id,
+        quantity=0,  # começa com zero
+        user_id=_.id,
+        reference="IN: Estoque inicial"
+    )
+    db.add(stock)
+    db.commit()
+    db.refresh(stock)
+
     return product
 
 # GET - Lista de produtos

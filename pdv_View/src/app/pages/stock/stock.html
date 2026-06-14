@@ -11,15 +11,15 @@
         <div class="stock-row card animate-slide-up" [style.animation-delay]="(i * 40) + 'ms'">
             <div class="stock-row__info">
                 <div class="stock-row__name title-md">
-                    {{ getProductName(item.product_id) }}
+                    {{ item.product.name }}
                 </div>
                 <div class="body-sm text-muted">
                     Mínimo: {{ item.min_quantity }}
                 </div>
             </div>
             <div class="stock-row__quantity">
-                <span class="badge" [class.badge--accent]="!item.is_low" [class.badge--primary]="item.is_low">
-                    {{ item.quantity }} {{ getProductUnit(item.product_id) }}
+                <span class="badge" [class.badge--accent]="item.product.is_active" [class.badge--primary]="!item.product.is_active">
+                    {{ item.quantity }} {{ getProductUnit(item.product.id) }}
                 </span>
             </div>
             @if (authService.isAdmin()) {
@@ -45,7 +45,7 @@
         <h3 class="headline-md">
             {{ modalType === 'in' ? 'Entrada de Estoque' : 'Ajuste de Estoque' }}
         </h3>
-        <p class="body-sm text-muted">{{ getProductName(selectedStock!.product_id) }}</p>
+        <!-- <p class="body-sm text-muted">{{ selectedStock!.product.id }}</p> -->
 
         <form class="modal-form" (ngSubmit)="saveAdjust()">
             <div class="form-group">

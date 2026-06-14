@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.core.database import get_db
 from app.core.security import require_admin, get_current_user
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/stock", tags=["stock"])
 # GET - Lista de Itens do estoque
 @router.get("/", response_model=list[StockOut])
 def list_stock(db: Session = Depends(get_db), _=Depends(get_current_user)):
-    return db.query(Stock).all()
+    return db.query(Stock).options(joinedload(Stock.product)).all()
 
 # GET - Itens do estoque por ID
 @router.get("/product/{product_id}", response_model=StockOut)

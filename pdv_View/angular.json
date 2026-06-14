@@ -90,6 +90,9 @@
               "buildTarget": "pdv-view:build:development"
             }
           },
+          "options": {
+            "allowedHosts": ["wallace-stallos"]
+          },
           "defaultConfiguration": "development"
         }
       }

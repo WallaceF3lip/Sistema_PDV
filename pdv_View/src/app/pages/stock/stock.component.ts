@@ -37,23 +37,17 @@ export class StockComponent implements OnInit {
   }
 
   loadData(): void {
-    this.isLoading = true;
-    this.productService.list(true).subscribe((products) => {
-      this.products = products;
-      this.stockService.list().subscribe({
-        next: (items) => {
-          this.stockItems.set(items);
-          this.isLoading = false;
-        },
-        error: () => {
-          this.isLoading = false;
-        },
-      });
+    this.isLoading = true;    
+    this.stockService.list().subscribe({
+      next: (items) => {
+        console.log(items);
+        this.stockItems.set(items);
+        this.isLoading = false;
+      },
+      error: () => {
+        this.isLoading = false;
+      },
     });
-  }
-
-  getProductName(productId: number): string {
-    return this.products.find((p) => p.id === productId)?.name || `#${productId}`;
   }
 
   getProductUnit(productId: number): string {
@@ -78,8 +72,8 @@ export class StockComponent implements OnInit {
 
     const obs =
       this.modalType === 'in'
-        ? this.stockService.stockIn(this.selectedStock.product_id, this.adjustForm)
-        : this.stockService.adjust(this.selectedStock.product_id, this.adjustForm);
+        ? this.stockService.stockIn(this.selectedStock.product.id, this.adjustForm)
+        : this.stockService.adjust(this.selectedStock.product.id, this.adjustForm);
 
     obs.subscribe({
       next: () => {

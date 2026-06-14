@@ -31,7 +31,7 @@ class StockService:
         user_id: int,
         reference: str | None = None,
     ) -> StockMovement:
-        if quantity <= 0:
+        if quantity <= -1:
             raise ValueError("quantity do movimento deve ser positivo")
 
         movement = StockMovement(

@@ -1,3 +1,5 @@
+import { Product } from "./product.model";
+
 export enum MovementTypeEnum {
   IN = 'IN',
   OUT = 'OUT',
@@ -8,11 +10,12 @@ export enum MovementTypeEnum {
 
 export interface Stock {
   id: number;
-  product_id: number;
   quantity: number;
+  product: Product;
   min_quantity: number;
   updated_at: string;
-  is_low: boolean;
+  limited: boolean;
+  // product_id: number;
 }
 
 export interface StockAdjust {

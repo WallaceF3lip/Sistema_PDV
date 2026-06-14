@@ -79,18 +79,17 @@ class ProductOut(BaseModel):
 
 class StockOut(BaseModel):
     id: int
-    product_id: int
     quantity: Decimal
+    product: ProductOut
     min_quantity: Decimal
     updated_at: datetime
-    is_low: bool = False
 
     model_config = {"from_attributes": True}
 
-    @model_validator(mode="after")
-    def compute_is_low(self):
-        self.is_low = self.quantity <= self.min_quantity
-        return self
+    # @model_validator(mode="after")
+    # def compute_is_low(self):
+    #     self.product.is_active = self.quantity <= self.min_quantity
+    #     return self
 
 
 class StockAdjust(BaseModel):
