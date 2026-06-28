@@ -5,6 +5,7 @@
   padding: var(--space-5) var(--space-8);
   background: var(--color-background);
   min-height: 72px;
+  box-shadow: 0 2px 8px rgba(45, 40, 37, 0.04);
 
   &__title {
     color: var(--color-text);
