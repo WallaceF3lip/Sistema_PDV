@@ -14,6 +14,10 @@ export class SaleService {
     return this.http.post<Sale>(this.apiUrl, {});
   }
 
+  getCurrent(): Observable<Sale | null> {
+    return this.http.get<Sale | null>(`${this.apiUrl}/current`);
+  }
+
   getById(id: number): Observable<Sale> {
     return this.http.get<Sale>(`${this.apiUrl}/${id}`);
   }
@@ -29,7 +33,7 @@ export class SaleService {
   }
 
   updateItem(saleId: number, itemId: number, quantity: number): Observable<Sale> {
-    return this.http.put<Sale>(`${this.apiUrl}/${saleId}/items/${itemId}`, quantity);
+    return this.http.put<Sale>(`${this.apiUrl}/${saleId}/items/${itemId}`, { quantity });
   }
 
   removeItem(saleId: number, itemId: number): Observable<Sale> {

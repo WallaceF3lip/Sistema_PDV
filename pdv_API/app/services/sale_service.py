@@ -17,7 +17,22 @@ from app.services.stock_service import StockService
 class SaleService:
 
     @staticmethod
-    def open_sale(db: Session, user_id: int) -> Sale:
+    def get_open_sale_for_user(db: Session, user_id: int) -> Sale | None:
+        """Retorna a venda OPEN mais recente do usuário, se existir."""
+        return (
+            db.query(Sale)
+            .filter(Sale.user_id == user_id, Sale.status == SaleStatusEnum.OPEN)
+            .order_by(Sale.opened_at.desc())
+            .first()
+        )
+
+    @classmethod
+    def open_sale(cls, db: Session, user_id: int) -> Sale:
+        """Reaproveita venda OPEN existente ou cria uma nova."""
+        existing = cls.get_open_sale_for_user(db, user_id)
+        if existing:
+            return existing
+
         sale = Sale(user_id=user_id, status=SaleStatusEnum.OPEN, total_amount=0)
         db.add(sale)
         db.commit()
@@ -119,6 +134,37 @@ class SaleService:
             
         db.flush()
         db.refresh(sale)
+        cls._recalculate_total(sale)
+        db.commit()
+        db.refresh(sale)
+        return sale
+
+    @classmethod
+    def update_item(
+        cls,
+        db: Session,
+        sale_id: int,
+        item_id: int,
+        quantity: Decimal,
+    ) -> Sale:
+        """Atualiza a quantidade de um item na venda (ex: produtos vendidos por KG)."""
+        sale = cls._get_open_sale(db, sale_id)
+        item = next((i for i in sale.items if i.id == item_id), None)
+        if not item:
+            raise HTTPException(status_code=404, detail="Item não encontrado nessa venda")
+
+        # Valida estoque disponível
+        stock = db.query(Stock).filter(Stock.product_id == item.product_id).first()
+        available = Decimal(str(stock.quantity)) if stock else Decimal("0")
+        if available < quantity:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Estoque insuficiente: disponível={available}",
+            )
+
+        item.quantity = quantity
+        item.subtotal = quantity * Decimal(str(item.unit_price))
+
         cls._recalculate_total(sale)
         db.commit()
         db.refresh(sale)

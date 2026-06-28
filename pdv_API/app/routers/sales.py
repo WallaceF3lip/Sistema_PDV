@@ -12,10 +12,17 @@ from app.services.sale_service import SaleService
 
 router = APIRouter(prefix="/sales", tags=["sales"])
 
+# GET - Buscar venda aberta do usuário atual
+@router.get("/current", response_model=SaleOut | None)
+def get_current_open_sale(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    """Retorna a venda OPEN do usuário, se existir. Retorna null se não houver."""
+    sale = SaleService.get_open_sale_for_user(db, user_id=current_user.id)
+    return sale
+
 # POST - Abrir venda/carrinho 
 @router.post("/", response_model=SaleOut, status_code=201)
 def open_sale(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
-    """Abre uma nova venda (caixa)."""
+    """Abre uma nova venda (ou reaproveita OPEN existente)."""
     return SaleService.open_sale(db, user_id=current_user.id)
 
 # GET - Consultar venda por ID

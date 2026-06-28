@@ -63,7 +63,7 @@
                   <span class="title-md">R$ {{ item.subtotal | number:'1.2-2' }}</span>
                   <button class="btn- -remove" (click)="removeItem(item)">✕</button>
                   @if(getProductUnit(item.product_id) === 'KG'){
-                    <button class="btn- -edit" (click)="removeItem(item)">✏️</button>
+                    <button class="btn- -edit" (click)="editQuantity(item)">✏️</button>
                   }                  
                 </div>
               </div>
@@ -152,3 +152,48 @@
     }
 
     <!-- Update quantity Modal -->
+    @if (showEditQuantity() && editingItem()) {
+      <div class="glass-overlay">
+        <div class="quantity-modal card animate-scale-in">
+          <div class="quantity-modal__header">
+            <h3 class="headline-md">Alterar Quantidade</h3>
+            <button class="btn btn-ghost" (click)="showEditQuantity.set(false)">✕</button>
+          </div>
+
+          <div class="quantity-modal__product">
+            <span class="body-lg">{{ getProductName(editingItem()!.product_id) }}</span>
+            <span class="label-sm text-muted">Preço unitário: R$ {{ editingItem()!.unit_price | number:'1.2-2' }} / KG</span>
+          </div>
+
+          <div class="quantity-modal__input">
+            <div class="form-group">
+              <label class="label-sm text-muted">PESO (KG)</label>
+              <input
+                class="input-field quantity-input"
+                type="number"
+                step="0.001"
+                min="0.001"
+                [ngModel]="newQuantity()"
+                (ngModelChange)="newQuantity.set($event)"
+                id="quantity-edit-input"
+                autofocus
+              />
+            </div>
+            @if (newQuantity() > 0) {
+              <div class="quantity-modal__preview animate-fade-in">
+                <span class="label-sm text-muted">SUBTOTAL</span>
+                <span class="title-lg text-accent">R$ {{ newQuantity() * editingItem()!.unit_price | number:'1.2-2' }}</span>
+              </div>
+            }
+          </div>
+
+          <button
+            class="btn btn-primary btn-lg btn-block"
+            [disabled]="newQuantity() <= 0"
+            (click)="confirmEditQuantity()"
+          >
+            Confirmar
+          </button>
+        </div>
+      </div>
+    }

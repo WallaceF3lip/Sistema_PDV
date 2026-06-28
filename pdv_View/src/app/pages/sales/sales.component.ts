@@ -26,6 +26,11 @@ export class SalesComponent implements OnInit {
   cashReceived = signal(0);
   isProcessing = signal(false);
 
+  // Edit quantity (KG items)
+  showEditQuantity = signal(false);
+  editingItem = signal<SaleItem | null>(null);
+  newQuantity = signal(0);
+
   paymentMethods = [
     { value: PaymentMethodEnum.PIX, label: 'PIX', icon: '⚡' },
     { value: PaymentMethodEnum.CARD, label: 'Cartão', icon: '💳' },
@@ -67,6 +72,13 @@ export class SalesComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // Restaura venda OPEN existente (se houver) ao abrir a página
+    this.saleService.getCurrent().subscribe((sale) => {
+      if (sale) {
+        this.currentSale.set(sale);
+      }
+    });
+
     this.productService.list().subscribe((products) => {
       this.products.set(products);
     });
@@ -111,6 +123,31 @@ export class SalesComponent implements OnInit {
           this.currentSale.set(updatedSale);
         },
       });
+  }
+
+  editQuantity(item: SaleItem): void {
+    this.editingItem.set(item);
+    this.newQuantity.set(item.quantity);
+    this.showEditQuantity.set(true);
+  }
+
+  confirmEditQuantity(): void {
+    const sale = this.currentSale();
+    const item = this.editingItem();
+    const qty = this.newQuantity();
+    if (!sale || !item || qty <= 0) return;
+
+    this.saleService.updateItem(sale.id, item.id, qty).subscribe({
+      next: (updatedSale) => {
+        this.currentSale.set(updatedSale);
+        this.showEditQuantity.set(false);
+        this.editingItem.set(null);
+        this.toastService.success('Quantidade atualizada!');
+      },
+      error: () => {
+        this.toastService.error('Erro ao atualizar quantidade.');
+      },
+    });
   }
 
   removeItem(item: SaleItem): void {
