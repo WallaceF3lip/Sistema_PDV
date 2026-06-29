@@ -1,6 +1,24 @@
+// ─── Sidebar Overlay ─────────────────────────────────────────────────────────
+.sidebar-overlay {
+  display: none;
+
+  @media (max-width: 1023px) {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(45, 40, 37, 0.3);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 99;
+    animation: fadeIn var(--transition-fast) ease-out;
+  }
+}
+
+// ─── Sidebar ─────────────────────────────────────────────────────────────────
 .sidebar {
-  width: 220px;
+  width: var(--sidebar-width);
   height: 100vh;
+  height: 100dvh;
   background: var(--color-surface-low);
   display: flex;
   flex-direction: column;
@@ -9,6 +27,16 @@
   left: 0;
   top: 0;
   z-index: 100;
+  transition: transform var(--transition-normal);
+
+  // Mobile: off-screen by default
+  @media (max-width: 1023px) {
+    transform: translateX(-100%);
+
+    &--open {
+      transform: translateX(0);
+    }
+  }
 
   &__logo {
     display: flex;
@@ -44,6 +72,7 @@
   }
 }
 
+// ─── Nav Items ───────────────────────────────────────────────────────────────
 .nav-item {
   display: flex;
   align-items: center;
@@ -61,6 +90,7 @@
   background: transparent;
   width: 100%;
   text-align: left;
+  min-height: 44px; // Touch target
 
   &__icon {
     font-size: 1.25rem;
@@ -98,6 +128,7 @@
   }
 }
 
+// ─── User Box ────────────────────────────────────────────────────────────────
 .user {
   display: flex;
   align-items: center;
@@ -127,6 +158,7 @@
     font-family: var(--font-display);
     font-weight: 700;
     font-size: 1rem;
+    flex-shrink: 0;
   }
 
   &__info {

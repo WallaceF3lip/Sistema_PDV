@@ -1,17 +1,89 @@
 .layout {
   display: flex;
   min-height: 100vh;
+  min-height: 100dvh;
 
   &__main {
     flex: 1;
-    margin-left: 220px;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    min-height: 100dvh;
+    min-width: 0; // Prevent flex overflow
+
+    // Desktop: offset by sidebar
+    @media (min-width: 1024px) {
+      margin-left: var(--sidebar-width);
+    }
+  }
+
+  &__mobile-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-5);
+    background: var(--color-background);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+
+    // Hide on desktop
+    @media (min-width: 1024px) {
+      display: none;
+    }
+  }
+
+  &__mobile-logo {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: var(--color-text);
+    letter-spacing: -0.02em;
+
+    &::first-letter {
+      color: var(--color-primary);
+    }
   }
 
   &__content {
     flex: 1;
-    padding: 0 var(--space-8) var(--space-8);
+    padding: var(--space-5) var(--space-4);
+
+    @media (min-width: 768px) {
+      padding: var(--space-5) var(--space-6);
+    }
+
+    @media (min-width: 1024px) {
+      padding: var(--space-5) var(--space-8);
+    }
+  }
+}
+
+// ─── Hamburger Button ────────────────────────────────────────────────────────
+.hamburger-btn {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 44px;
+  height: 44px;
+  padding: 10px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+
+  &:hover {
+    background: var(--color-surface-high);
+  }
+
+  &__line {
+    display: block;
+    width: 100%;
+    height: 2.5px;
+    background: var(--color-text);
+    border-radius: 2px;
+    transition: all var(--transition-fast);
   }
 }

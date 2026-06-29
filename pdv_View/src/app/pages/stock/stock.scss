@@ -3,7 +3,9 @@
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
+    gap: var(--space-4);
     margin-bottom: var(--space-6);
+    flex-wrap: wrap;
   }
 
   &__list {
@@ -21,52 +23,44 @@
 .stock-row {
   display: flex;
   align-items: center;
-  gap: var(--space-5);
-  padding: var(--space-4) var(--space-5);
-  min-height: 80px;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  min-height: 72px;
   animation-fill-mode: both;
+  flex-wrap: wrap;
+
+  @media (min-width: 768px) {
+    gap: var(--space-5);
+    padding: var(--space-4) var(--space-5);
+    flex-wrap: nowrap;
+  }
 
   &__info {
-    flex: 2;
+    flex: 1 1 100%;
+    min-width: 0;
+
+    @media (min-width: 768px) {
+      flex: 2 1 0;
+    }
   }
 
   &__quantity {
-    min-width: 100px;
+    min-width: 80px;
     text-align: center;
+
+    @media (min-width: 768px) {
+      min-width: 100px;
+    }
   }
 
   &__actions {
     display: flex;
     gap: var(--space-2);
+    flex-wrap: wrap;
+
+    .btn {
+      font-size: 0.875rem;
+      padding: var(--space-2) var(--space-4);
+    }
   }
-}
-
-.modal-card {
-  width: 100%;
-  max-width: 440px;
-  padding: var(--space-6);
-}
-
-.modal-form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  margin-top: var(--space-5);
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-
-  label {
-    padding-left: var(--space-3);
-  }
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-3);
-  margin-top: var(--space-4);
 }

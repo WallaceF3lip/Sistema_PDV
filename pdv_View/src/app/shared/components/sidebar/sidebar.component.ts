@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { filter } from 'rxjs/operators';
 
 interface NavItem {
   icon: string;
@@ -18,6 +19,8 @@ interface NavItem {
   styleUrl: './sidebar.scss',
 })
 export class SidebarComponent {
+  isOpen = false;
+
   navItems: NavItem[] = [
     { icon: '▦', label: 'Dashboard', route: '/dashboard' },
     { icon: '◎', label: 'Vendas', route: '/sales' },
@@ -37,11 +40,33 @@ export class SidebarComponent {
     return this.authService.getCurrentUser();
   }
 
-  constructor(protected authService: AuthService) {}
+  constructor(protected authService: AuthService, private router: Router) {
+    // Close sidebar on route change (mobile)
+    this.router.events
+      .pipe(filter((e) => e instanceof NavigationEnd))
+      .subscribe(() => {
+        this.isOpen = false;
+      });
+  }
+
+  toggle(): void {
+    this.isOpen = !this.isOpen;
+  }
+
+  close(): void {
+    this.isOpen = false;
+  }
 
   onLogout(): void {
     this.authService.logout();
     window.location.href = '/login';
   }
-}
 
+  @HostListener('window:resize')
+  onResize(): void {
+    // Auto-close sidebar when resizing above breakpoint
+    if (window.innerWidth >= 1024) {
+      this.isOpen = false;
+    }
+  }
+}

@@ -1,27 +1,57 @@
+// ─── Sales PDV Layout ────────────────────────────────────────────────────────
 .sales-pdv {
   display: flex;
-  gap: 0;
-  height: calc(100vh - 72px);
-  margin: 0 calc(-1 * var(--space-8));
+  flex-direction: column;
+  min-height: calc(100vh - 120px);
+  min-height: calc(100dvh - 120px);
+  margin: 0 calc(-1 * var(--space-4));
   margin-top: calc(-1 * var(--space-5));
 
+  @media (min-width: 768px) {
+    margin: 0 calc(-1 * var(--space-6));
+    margin-top: calc(-1 * var(--space-5));
+  }
+
+  @media (min-width: 1024px) {
+    flex-direction: row;
+    gap: 0;
+    height: calc(100dvh - 1%);
+    margin: 0 calc(-1 * var(--space-8));
+    margin-top: calc(-1 * var(--space-5));
+  }
+
   &__menu {
-    flex: 65;
     display: flex;
     flex-direction: column;
-    padding: var(--space-6) var(--space-6) var(--space-6) var(--space-8);
+    padding: var(--space-4);
     overflow-y: auto;
+
+    @media (min-width: 768px) {
+      padding: var(--space-5) var(--space-6);
+    }
+
+    @media (min-width: 1024px) {
+      flex: 65;
+      padding: var(--space-6) var(--space-6) var(--space-6) var(--space-8);
+    }
   }
 
   &__cart {
-    flex: 35;
     background: var(--color-surface);
     display: flex;
     flex-direction: column;
-    box-shadow: -4px 0 20px rgba(45, 40, 37, 0.04);
+    box-shadow: 0 -4px 20px rgba(45, 40, 37, 0.04);
+    min-height: 300px;
+
+    @media (min-width: 1024px) {
+      flex: 35;
+      box-shadow: -4px 0 20px rgba(45, 40, 37, 0.04);
+      min-height: auto;
+    }
   }
 }
 
+// ─── Menu Header ─────────────────────────────────────────────────────────────
 .menu-header {
   margin-bottom: var(--space-5);
 
@@ -31,17 +61,32 @@
 }
 
 .search-bar {
-  height: 64px;
-  font-size: 1.125rem;
+  height: 52px;
+  font-size: 1rem;
   background: var(--color-surface);
   box-shadow: var(--shadow-soft);
+
+  @media (min-width: 768px) {
+    height: 64px;
+    font-size: 1.125rem;
+  }
 }
 
+// ─── Product Grid ────────────────────────────────────────────────────────────
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fill, minmax(min(140px, 100%), 1fr));
+  gap: var(--space-3);
   flex: 1;
+
+  @media (min-width: 480px) {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: var(--space-4);
+  }
+
+  @media (min-width: 1280px) {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
 
   &__empty {
     grid-column: 1 / -1;
@@ -54,11 +99,16 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  min-height: 160px;
-  padding: var(--space-5);
+  min-height: 120px;
+  padding: var(--space-4);
   cursor: pointer;
   transition: all var(--transition-fast);
   user-select: none;
+
+  @media (min-width: 768px) {
+    min-height: 160px;
+    padding: var(--space-5);
+  }
 
   &:active {
     transform: scale(0.95);
@@ -66,6 +116,7 @@
 
   &__name {
     margin-bottom: var(--space-2);
+    word-break: break-word;
   }
 
   &__sku {
@@ -77,34 +128,51 @@
   }
 }
 
-// Cart
+// ─── Cart ────────────────────────────────────────────────────────────────────
 .cart-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-5) var(--space-5) var(--space-4);
+  padding: var(--space-4) var(--space-4) var(--space-3);
+
+  @media (min-width: 768px) {
+    padding: var(--space-5) var(--space-5) var(--space-4);
+  }
 }
 
 .cart-items {
   flex: 1;
   overflow-y: auto;
-  padding: 0 var(--space-5);
+  padding: 0 var(--space-4);
+
+  @media (min-width: 768px) {
+    padding: 0 var(--space-5);
+  }
 }
 
 .cart-empty {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 200px;
+  height: 150px;
   text-align: center;
+
+  @media (min-width: 1024px) {
+    height: 200px;
+  }
 }
 
 .cart-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-4) 0;
+  padding: var(--space-3) 0;
+  gap: var(--space-3);
   animation-fill-mode: both;
+
+  @media (min-width: 768px) {
+    padding: var(--space-4) 0;
+  }
 
   &:not(:last-child) {
     border-bottom: 1px solid rgba(223, 191, 188, 0.10);
@@ -114,12 +182,25 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-1);
+    min-width: 0;
+    flex: 1;
+
+    .body-md, .body-sm {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   }
 
   &__right {
     display: flex;
     align-items: center;
-    gap: var(--space-3);
+    gap: var(--space-2);
+    flex-shrink: 0;
+
+    @media (min-width: 768px) {
+      gap: var(--space-3);
+    }
   }
 }
 
@@ -127,14 +208,14 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  // background: rgba(224, 93, 83, 0.08);
-  // color: var(--color-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 0.75rem;
   cursor: pointer;
   transition: all var(--transition-fast);
+  flex-shrink: 0;
+  min-width: 32px;
 
   &:hover {
     background: var(--color-primary);
@@ -153,8 +234,12 @@
 }
 
 .cart-footer {
-  padding: var(--space-5);
+  padding: var(--space-4);
   background: var(--color-surface);
+
+  @media (min-width: 768px) {
+    padding: var(--space-5);
+  }
 }
 
 .cart-total {
@@ -162,24 +247,43 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: var(--space-5);
+
+  .display-md {
+    font-size: clamp(1.5rem, 1.2rem + 1.5vw, 2.5rem);
+  }
 }
 
-// Payment Modal
+// ─── Payment Modal ───────────────────────────────────────────────────────────
 .payment-modal {
   width: 100%;
-  max-width: 520px;
-  padding: var(--space-6);
+  max-width: min(520px, calc(100vw - 2rem));
+  padding: var(--space-5);
+  max-height: calc(100vh - 2rem);
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+
+  @media (min-width: 768px) {
+    padding: var(--space-6);
+  }
 
   &__header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: var(--space-6);
+    margin-bottom: var(--space-5);
+
+    @media (min-width: 768px) {
+      margin-bottom: var(--space-6);
+    }
   }
 
   &__amount {
     text-align: center;
-    margin-bottom: var(--space-6);
+    margin-bottom: var(--space-5);
+
+    @media (min-width: 768px) {
+      margin-bottom: var(--space-6);
+    }
 
     .label-sm {
       display: block;
@@ -189,8 +293,18 @@
 
   &__methods {
     display: flex;
-    gap: var(--space-4);
-    margin-bottom: var(--space-6);
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+
+    @media (min-width: 480px) {
+      flex-wrap: nowrap;
+      gap: var(--space-4);
+    }
+
+    @media (min-width: 768px) {
+      margin-bottom: var(--space-6);
+    }
   }
 
   &__cash {
@@ -201,33 +315,41 @@
 .payment-total {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 4rem;
+  font-size: clamp(2rem, 1.5rem + 3vw, 4rem);
   letter-spacing: -0.02em;
   color: var(--color-text);
+  word-break: break-word;
 }
 
 .tender-btn {
   flex: 1;
+  min-width: calc(33% - var(--space-3));
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  min-height: 120px;
+  min-height: 90px;
   background: var(--color-surface);
   border: 2px solid var(--color-surface-high);
   border-radius: var(--radius-card);
   cursor: pointer;
   transition: all var(--transition-fast);
-  padding: var(--space-4);
+  padding: var(--space-3);
+
+  @media (min-width: 480px) {
+    min-height: 120px;
+    padding: var(--space-4);
+  }
 
   &__icon {
-    font-size: 2rem;
+    font-size: clamp(1.5rem, 1rem + 1vw, 2rem);
   }
 
   &__label {
     color: var(--color-muted);
     transition: color var(--transition-fast);
+    font-size: clamp(0.8125rem, 0.75rem + 0.25vw, 1rem);
   }
 
   &:hover {
@@ -248,7 +370,7 @@
 .cash-input {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 1.5rem;
+  font-size: clamp(1.125rem, 1rem + 0.5vw, 1.5rem);
   text-align: center;
 }
 
@@ -262,21 +384,18 @@
   }
 }
 
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-
-  label {
-    padding-left: var(--space-3);
-  }
-}
-
-// Quantity Edit Modal
+// ─── Quantity Edit Modal ─────────────────────────────────────────────────────
 .quantity-modal {
   width: 100%;
-  max-width: 420px;
-  padding: var(--space-6);
+  max-width: min(420px, calc(100vw - 2rem));
+  padding: var(--space-5);
+  max-height: calc(100vh - 2rem);
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+
+  @media (min-width: 768px) {
+    padding: var(--space-6);
+  }
 
   &__header {
     display: flex;
@@ -313,6 +432,6 @@
 .quantity-input {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 1.5rem;
+  font-size: clamp(1.125rem, 1rem + 0.5vw, 1.5rem);
   text-align: center;
 }

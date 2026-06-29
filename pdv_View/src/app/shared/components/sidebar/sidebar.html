@@ -1,5 +1,10 @@
 
-    <aside class="sidebar">
+    <!-- Mobile overlay backdrop -->
+    @if (isOpen) {
+      <div class="sidebar-overlay" (click)="close()"></div>
+    }
+
+    <aside class="sidebar" [class.sidebar--open]="isOpen">
       <div class="sidebar__logo">
         <span class="logo-icon">◆</span>
         <span class="logo-text">PDV</span>
