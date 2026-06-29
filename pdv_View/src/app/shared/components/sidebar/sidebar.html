@@ -20,6 +20,18 @@
       </nav>
 
       <div class="sidebar__footer">
+         @if (user) {
+        <div class="user__box">
+            <div class="user__avatar">
+                {{ user.name.charAt(0).toUpperCase() }}
+            </div>
+            <div class="user__info">
+                <span class="user__name body-md">{{ user.name }}</span>
+                <span class="user__role label-sm">{{ user.role }}</span>
+            </div>
+        </div>
+        }
+        <br>
         <button class="nav-item nav-item--logout" (click)="onLogout()">
           <span class="nav-item__icon">⏻</span>
           <span class="nav-item__label">Sair</span>

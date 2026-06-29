@@ -97,3 +97,50 @@
     }
   }
 }
+
+.user {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-5) var(--space-8);
+  background: var(--color-background);
+  min-height: 72px;
+  box-shadow: 0 2px 8px rgba(45, 40, 37, 0.04);
+
+  &__box {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    box-shadow: 0 2px 8px rgba(45, 40, 37, 0.100);
+    border-radius: 20px;
+  }
+
+  &__avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--color-surface-high);
+    color: var(--color-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1rem;
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__name {
+    color: var(--color-text);
+    line-height: 1.2;
+  }
+
+  &__role {
+    color: var(--color-muted);
+    font-size: 0.6875rem;
+  }
+}

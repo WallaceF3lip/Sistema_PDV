@@ -33,6 +33,10 @@ export class SidebarComponent {
     );
   }
 
+  get user() {
+    return this.authService.getCurrentUser();
+  }
+
   constructor(protected authService: AuthService) {}
 
   onLogout(): void {
