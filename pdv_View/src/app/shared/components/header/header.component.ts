@@ -9,6 +9,7 @@ import { AuthService } from '../../../core/services/auth.service';
   templateUrl: './header.html',
   styleUrl: './header.scss',
 })
+// SEM UTILIZAR
 export class HeaderComponent {
   pageTitle = '';
 

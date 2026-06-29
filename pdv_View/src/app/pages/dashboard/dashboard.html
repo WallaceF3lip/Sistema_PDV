@@ -6,10 +6,56 @@
         </p>
     </div>
 
+    <!-- KPI Summary Cards -->
+    <div class="dashboard__kpis animate-slide-up" style="animation-delay: 60ms">
+        <div class="kpi-card card">
+            <span class="kpi-card__icon">📊</span>
+            <span class="kpi-card__value">{{ totalSales }}</span>
+            <span class="kpi-card__label body-sm text-muted">Vendas Hoje</span>
+        </div>
+        <div class="kpi-card card">
+            <span class="kpi-card__icon">💰</span>
+            <span class="kpi-card__value">R$ {{ totalRevenue.toFixed(2) }}</span>
+            <span class="kpi-card__label body-sm text-muted">Faturamento</span>
+        </div>
+        <div class="kpi-card card">
+            <span class="kpi-card__icon">🎯</span>
+            <span class="kpi-card__value">R$ {{ averageTicket.toFixed(2) }}</span>
+            <span class="kpi-card__label body-sm text-muted">Ticket Médio</span>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="dashboard__charts animate-slide-up" style="animation-delay: 120ms">
+        <div class="chart-card card">
+            <h3 class="headline-md chart-card__title">Vendas por Hora</h3>
+            <p class="body-sm text-muted chart-card__subtitle">Faturamento e quantidade de vendas ao longo do dia</p>
+            <div class="chart-card__canvas-wrapper">
+                <div class="chart-card__loading" [class.chart-card__loading--hidden]="!chartsLoading">
+                    <span class="chart-card__spinner"></span>
+                    <span class="body-sm text-muted">Carregando dados...</span>
+                </div>
+                <canvas #barChartCanvas></canvas>
+            </div>
+        </div>
+        <div class="chart-card chart-card--pie card">
+            <h3 class="headline-md chart-card__title">Formas de Pagamento</h3>
+            <p class="body-sm text-muted chart-card__subtitle">Distribuição por método de pagamento</p>
+            <div class="chart-card__canvas-wrapper chart-card__canvas-wrapper--pie">
+                <div class="chart-card__loading" [class.chart-card__loading--hidden]="!chartsLoading">
+                    <span class="chart-card__spinner"></span>
+                    <span class="body-sm text-muted">Carregando dados...</span>
+                </div>
+                <canvas #pieChartCanvas></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page Options -->
     <div class="dashboard__grid">
         @for (card of visibleCards; track card.route; let i = $index) {
         <a class="dashboard-card card animate-slide-up" [class.dashboard-card--highlighted]="card.highlighted"
-            [routerLink]="card.route" [style.animation-delay]="(i * 60) + 'ms'">
+            [routerLink]="card.route" [style.animation-delay]="((i * 60) + 100) + 'ms'">
             <span class="dashboard-card__icon">{{ card.icon }}</span>
             <span class="dashboard-card__label headline-md">{{ card.label }}</span>
             <span class="dashboard-card__desc body-sm text-muted">{{ card.description }}</span>
