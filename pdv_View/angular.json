@@ -58,10 +58,6 @@
           },
           "configurations": {
             "production": {
-              "define": {
-                "process.env['API_URL']": "https://sistema-pdvback.vercel.app",
-                "process.env.API_URL": "https://sistema-pdvback.vercel.app"
-              },
               "budgets": [
                 {
                   "type": "initial",
@@ -77,10 +73,6 @@
               "outputHashing": "all"
             },
             "development": {
-              "define": {
-                "process.env['API_URL']": "\"'http://localhost:8000'\"",
-                "process.env.API_URL": "\"'http://localhost:8000'\""
-              },
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
