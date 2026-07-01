@@ -59,8 +59,8 @@
           "configurations": {
             "production": {
               "define": {
-                "process.env['API_URL']": "\"'https://sistema-pdvback.vercel.app'\"",
-                "process.env.API_URL": "\"'https://sistema-pdvback.vercel.app'\""
+                "process.env['API_URL']": "https://sistema-pdvback.vercel.app",
+                "process.env.API_URL": "https://sistema-pdvback.vercel.app"
               },
               "budgets": [
                 {
