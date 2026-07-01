@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import Base, engine
 from app.routers import auth, users, products, stock, sales, cash_registers
 
-# Cria tabelas (em produção, use Alembic)
+# Cria tabelas se não existirem (em produção, prefira Alembic)
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -32,6 +32,7 @@ app.include_router(cash_registers.router)
 @app.get("/", tags=["health"])
 def health():
     return {"status": "ok", "service": "PDV API"}
+
 
 if __name__ == "__main__":
     import uvicorn
