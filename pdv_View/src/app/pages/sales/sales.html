@@ -106,38 +106,72 @@
             <span class="payment-total">R$ {{ currentSale()!.total_amount | number:'1.2-2' }}</span>
           </div>
 
-          <div class="payment-modal__methods">
-            @for (method of paymentMethods; track method.value) {
-              <button
-                class="tender-btn"
-                [class.tender-btn--active]="selectedMethod() === method.value"
-                (click)="selectedMethod.set(method.value)"
-              >
-                <span class="tender-btn__icon">{{ method.icon }}</span>
-                <span class="tender-btn__label title-md">{{ method.label }}</span>
-              </button>
+          <!-- Multiple payment entries -->
+          <div class="payment-entries">
+            @for (entry of paymentEntries(); track $index; let i = $index) {
+              <div class="payment-entry">
+                @if (i > 0) {
+                  <button
+                    class="payment-entry__remove"
+                    (click)="removePaymentEntry(i)"
+                    aria-label="Remover forma de pagamento"
+                  >✕</button>
+                }
+                <div class="payment-entry__methods">
+                  @for (method of paymentMethods; track method.value) {
+                    <button
+                      class="tender-btn tender-btn--compact"
+                      [class.tender-btn--active]="entry.method === method.value"
+                      (click)="updateEntryMethod(i, method.value)"
+                      [attr.aria-label]="method.label"
+                    >
+                      <span class="tender-btn__icon">{{ method.icon }}</span>
+                      <span class="tender-btn__label">{{ method.label }}</span>
+                    </button>
+                  }
+                </div>
+                
+                <div class="payment-entry__value">
+                  <label class="label-sm text-muted">VALOR:</label>
+                  <input
+                    class="input-field cash-input"
+                    type="number"
+                    step="0.5"
+                    min="0.5"
+                    [ngModel]="entry.amount"
+                    (ngModelChange)="updateEntryAmount(i, $event)"
+                  />
+                </div>
+
+                
+              </div>
             }
           </div>
 
-          @if (selectedMethod() === 'CASH') {
-            <div class="payment-modal__cash">
-              <div class="form-group">
-                <label class="label-sm text-muted">VALOR RECEBIDO</label>
-                <input
-                  class="input-field cash-input"
-                  type="number"
-                  step="0.01"
-                  [ngModel]="cashReceived()"
-                  (ngModelChange)="cashReceived.set($event); calculateChange()"
-                />
-              </div>
-              @if (changeAmount() > 0) {
-                <div class="change-display animate-fade-in">
-                  <span class="label-sm text-muted">TROCO</span>
-                  <span class="headline-lg text-accent">R$ {{ changeAmount() | number:'1.2-2' }}</span>
-                </div>
-              }
+          <!-- Remaining amount indicator -->
+          @if (remainingAmount() > 0.01) {
+            <div class="remaining-badge animate-fade-in">
+              <span class="label-sm">RESTANTE</span>
+              <span class="remaining-badge__value">R$ {{ remainingAmount() | number:'1.2-2' }}</span>
             </div>
+          }
+
+          <!-- Change display (CASH only) -->
+          @if (changeAmount() > 0) {
+            <div class="change-display animate-fade-in">
+              <span class="label-sm text-muted">TROCO</span>
+              <span class="headline-lg text-accent">R$ {{ changeAmount() | number:'1.2-2' }}</span>
+            </div>
+          }
+
+          <!-- Add payment entry button -->
+          @if (canAddEntry()) {
+            <button
+              class="btn btn-ghost btn-block payment-add-btn"
+              (click)="addPaymentEntry()"
+            >
+              + Adicionar forma de pagamento
+            </button>
           }
 
           <button

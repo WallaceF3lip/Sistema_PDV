@@ -258,7 +258,6 @@
   width: 100%;
   max-width: min(520px, calc(100vw - 2rem));
   padding: var(--space-5);
-  max-height: calc(100vh - 2rem);
   max-height: calc(100dvh - 2rem);
   overflow-y: auto;
 
@@ -291,26 +290,166 @@
     }
   }
 
-  &__methods {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-3);
-    margin-bottom: var(--space-5);
-
-    @media (min-width: 480px) {
-      flex-wrap: nowrap;
-      gap: var(--space-4);
-    }
-
-    @media (min-width: 768px) {
-      margin-bottom: var(--space-6);
-    }
-  }
-
   &__cash {
     margin-bottom: var(--space-5);
   }
 }
+
+// ─── Payment Entries List ─────────────────────────────────────────────────────
+.payment-entries {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+
+  @media (min-width: 768px) {
+    gap: var(--space-4);
+  }
+}
+
+.payment-entry {
+  display: grid;
+  // grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  // gap: var(--space-2) var(--space-3);
+  padding: var(--space-4);
+  background: var(--color-surface-high);
+  border-radius: var(--radius-card);
+  position: relative;
+
+  @media (min-width: 480px) {
+    grid-template-columns: 1fr auto auto;
+    grid-template-rows: auto;
+    align-items: center;
+    // gap: var(--space-3);
+  }
+
+  &__methods {
+    display: flex;
+    gap: var(--space-2);
+    // grid-column: 1 / -1;
+
+    @media (min-width: 480px) {
+      grid-column: 1;
+      flex-wrap: nowrap;
+    }
+  }
+
+  &__value {
+    grid-column: 1;
+    grid-row: 2;
+    margin-bottom: 3%;
+
+    @media (min-width: 480px) {
+      // grid-column: 2;
+      grid-row: 1;
+      min-width: 120px;
+    }
+
+    .label-sm {
+      display: block;
+      margin-bottom: var(--space-1);
+    }
+
+    .cash-input {
+      width: 100%;
+    }
+  }
+
+  &__remove {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: baseline;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(224, 93, 83, 0.10);
+    color: var(--color-primary);
+    font-size: 0.875rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+
+    @media (min-width: 480px) {
+      grid-column: 3;
+      grid-row: 1;
+      align-self: baseline;
+    }
+
+    &:hover {
+      background: var(--color-primary);
+      color: #fff;
+    }
+  }
+}
+
+// ─── Tender Button (compact variant for entries) ──────────────────────────────
+.tender-btn--compact {
+  flex: 1;
+  min-width: 0;
+  min-height: 60px;
+  padding: var(--space-2);
+
+  @media (min-width: 480px) {
+    min-height: 72px;
+    padding: var(--space-3);
+  }
+
+  .tender-btn__icon {
+    font-size: 1.125rem;
+  }
+
+  .tender-btn__label {
+    font-size: 0.75rem;
+  }
+}
+
+// ─── Remaining badge ──────────────────────────────────────────────────────────
+.remaining-badge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  background: rgba(255, 166, 0, 0.12);
+  border: 1px solid rgba(255, 166, 0, 0.3);
+  border-radius: var(--radius-card);
+  margin-bottom: var(--space-3);
+
+  .label-sm {
+    color: #b07800;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+
+  &__value {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.125rem;
+    color: #b07800;
+  }
+}
+
+// ─── Add payment button ───────────────────────────────────────────────────────
+.payment-add-btn {
+  margin-bottom: var(--space-4);
+  border: 2px dashed var(--color-surface-high);
+  color: var(--color-muted);
+  font-size: 0.9375rem;
+  min-height: 48px;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: rgba(224, 93, 83, 0.05);
+  }
+}
+
+
 
 .payment-total {
   font-family: var(--font-display);
@@ -372,6 +511,8 @@
   font-weight: 700;
   font-size: clamp(1.125rem, 1rem + 0.5vw, 1.5rem);
   text-align: center;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-soft);
 }
 
 .change-display {

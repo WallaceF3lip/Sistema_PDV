@@ -6,6 +6,12 @@ import { ProductService } from '../../core/services/product.service';
 import { ToastService } from '../../core/services/toast.service';
 import { Sale, Product, PaymentMethodEnum, PaymentIn, SaleItem } from '../../core/models';
 
+// Local interface for each payment entry in the modal
+export interface PaymentEntry {
+  method: PaymentMethodEnum;
+  amount: number;
+}
+
 @Component({
   selector: 'app-sales',
   standalone: true,
@@ -22,8 +28,7 @@ export class SalesComponent implements OnInit {
 
   // Payment
   showPayment = signal(false);
-  selectedMethod = signal<PaymentMethodEnum>(PaymentMethodEnum.PIX);
-  cashReceived = signal(0);
+  paymentEntries = signal<PaymentEntry[]>([]);
   isProcessing = signal(false);
 
   // Edit quantity (KG items)
@@ -46,23 +51,40 @@ export class SalesComponent implements OnInit {
     );
   });
 
-  changeAmount = computed(() => {
+  /** Total da venda menos a soma das entradas (pode ser negativo quando há troco em dinheiro) */
+  remainingAmount = computed(() => {
     const sale = this.currentSale();
-    const received = this.cashReceived();
-    if (sale && received > sale.total_amount) {
-      return received - sale.total_amount;
+    if (!sale) return 0;
+    const sum = this.paymentEntries().reduce((acc, e) => acc + (e.amount || 0), 0);
+    return Math.round((sale.total_amount - sum) * 100) / 100;
+  });
+
+  /** Troco: excedente quando há pelo menos uma entrada CASH e a soma supera o total */
+  changeAmount = computed(() => {
+    const hasCash = this.paymentEntries().some(e => e.method === PaymentMethodEnum.CASH);
+    const remaining = this.remainingAmount();
+    if (hasCash && remaining < 0) {
+      return Math.round(Math.abs(remaining) * 100) / 100;
     }
     return 0;
   });
 
+  /** Habilita finalização quando a soma cobre o total (tolerância R$ 0,01) e todas as entradas têm valor > 0 */
   canFinalize = computed(() => {
     const sale = this.currentSale();
-    const method = this.selectedMethod();
     if (!sale || this.isProcessing()) return false;
-    if (method === 'CASH') {
-      return this.cashReceived() >= sale.total_amount;
-    }
-    return true;
+    const entries = this.paymentEntries();
+    if (entries.length === 0) return false;
+    const allPositive = entries.every(e => e.amount > 0);
+    const remaining = this.remainingAmount();
+    // Permite finalizar quando remaining <= 0,01 (total coberto) ou há CASH com excedente (troco)
+    const covered = remaining <= 0.01;
+    return allPositive && covered;
+  });
+
+  /** Permite adicionar entrada enquanto existirem menos de 3 e ainda houver valor restante */
+  canAddEntry = computed(() => {
+    return this.paymentEntries().length < 3 && this.remainingAmount() > 0;
   });
 
   constructor(
@@ -171,13 +193,42 @@ export class SalesComponent implements OnInit {
   }
 
   openPayment(): void {
+    const sale = this.currentSale();
+    if (!sale) return;
+    // Inicializa com única entrada cobrindo o total (PIX como padrão)
+    this.paymentEntries.set([
+      { method: PaymentMethodEnum.PIX, amount: sale.total_amount }
+    ]);
     this.showPayment.set(true);
-    this.selectedMethod.set(PaymentMethodEnum.PIX);
-    this.cashReceived.set(0);
   }
 
-  calculateChange(): void {
-    // Computed property handles this, keeping method signature for HTML template
+  /** Adiciona nova entrada pré-preenchida com o valor restante */
+  addPaymentEntry(): void {
+    const remaining = Math.max(0, this.remainingAmount());
+    this.paymentEntries.update(entries => [
+      ...entries,
+      { method: PaymentMethodEnum.PIX, amount: remaining }
+    ]);
+  }
+
+  /** Remove a entrada pelo índice (a primeira entrada não pode ser removida) */
+  removePaymentEntry(index: number): void {
+    this.paymentEntries.update(entries => entries.filter((_, i) => i !== index));
+  }
+
+  /** Atualiza o método de pagamento de uma entrada (imutável) */
+  updateEntryMethod(index: number, method: PaymentMethodEnum): void {
+    this.paymentEntries.update(entries =>
+      entries.map((e, i) => i === index ? { ...e, method } : e)
+    );
+  }
+
+  /** Atualiza o valor de uma entrada (imutável) */
+  updateEntryAmount(index: number, amount: number): void {
+    const parsed = parseFloat(String(amount)) || 0;
+    this.paymentEntries.update(entries =>
+      entries.map((e, i) => i === index ? { ...e, amount: parsed } : e)
+    );
   }
 
   finalizeSale(): void {
@@ -185,12 +236,10 @@ export class SalesComponent implements OnInit {
     if (!sale) return;
     this.isProcessing.set(true);
 
-    const payments: PaymentIn[] = [
-      {
-        method: this.selectedMethod(),
-        amount: sale.total_amount,
-      },
-    ];
+    // Filtra entradas com valor > 0 e mapeia para PaymentIn[]
+    const payments: PaymentIn[] = this.paymentEntries()
+      .filter(e => e.amount > 0)
+      .map(e => ({ method: e.method, amount: e.amount }));
 
     this.saleService.finalize(sale.id, { payments }).subscribe({
       next: () => {
