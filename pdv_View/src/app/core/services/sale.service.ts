@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Sale, AddItemRequest, FinalizeSaleRequest } from '../models';
+import { Sale, AddItemRequest, FinalizeSaleRequest, UpdateOrderDetailsRequest } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class SaleService {
@@ -42,6 +42,10 @@ export class SaleService {
 
   finalize(saleId: number, request: FinalizeSaleRequest): Observable<Sale> {
     return this.http.post<Sale>(`${this.apiUrl}/${saleId}/finalize`, request);
+  }
+
+  updateOrderDetails(saleId: number, payload: UpdateOrderDetailsRequest): Observable<Sale> {
+    return this.http.patch<Sale>(`${this.apiUrl}/${saleId}/order-details`, payload);
   }
 
   cancel(saleId: number): Observable<Sale> {

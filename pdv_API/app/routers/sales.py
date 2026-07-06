@@ -7,7 +7,7 @@ import datetime as dt
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.sale import Sale
-from app.schemas.schemas import AddItemRequest, FinalizeSaleRequest, SaleOut
+from app.schemas.schemas import AddItemRequest, FinalizeSaleRequest, SaleOut, UpdateOrderDetailsRequest
 from app.services.sale_service import SaleService
 
 router = APIRouter(prefix="/sales", tags=["sales"])
@@ -108,6 +108,21 @@ def finalize_sale(
         sale_id=sale_id,
         payments=payments,
         user_id=current_user.id,
+    )
+
+# PATCH - Salvar detalhes do pedido sem finalizar
+@router.patch("/{sale_id}/order-details", response_model=SaleOut)
+def update_order_details(
+    sale_id: int,
+    payload: UpdateOrderDetailsRequest,
+    db: Session = Depends(get_db),
+    _=Depends(get_current_user),
+):
+    """Salva cliente, observação, tipo de pedido e dados de entrega sem finalizar a venda."""
+    return SaleService.update_order_details(
+        db=db,
+        sale_id=sale_id,
+        data=payload.model_dump(exclude_none=True),
     )
 
 # POST - Cancelar venda que ja foi fechada

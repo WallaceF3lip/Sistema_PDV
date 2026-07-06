@@ -8,7 +8,7 @@ from decimal import Decimal
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 
-from app.models.sale import Sale, SaleItem, Payment, SaleStatusEnum
+from app.models.sale import Sale, SaleItem, Payment, SaleStatusEnum, OrderTypeEnum
 from app.models.product import Product
 from app.models.stock import Stock
 from app.services.stock_service import StockService
@@ -192,13 +192,25 @@ class SaleService:
             raise HTTPException(status_code=400, detail="Venda sem itens")
 
         total = Decimal(str(sale.total_amount))
-        paid = sum(Decimal(str(p["amount"])) for p in payments)
 
-        if paid != total:
-            raise HTTPException(
-                status_code=422,
-                detail=f"Pagamento ({paid}) difere do total da venda ({total})"
-            )
+        # Permite finalizar sem pagamento quando is_paid=False (reserva de entrega ou retirada)
+        is_reservation = (
+            sale.order_type in (OrderTypeEnum.DELIVERY, OrderTypeEnum.PICKUP)
+            and sale.is_paid is False
+        )
+
+        if not is_reservation:
+            if not payments:
+                raise HTTPException(
+                    status_code=422,
+                    detail="Pagamento obrigatório para este tipo de pedido"
+                )
+            paid = sum(Decimal(str(p["amount"])) for p in payments)
+            if paid != total:
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"Pagamento ({paid}) difere do total da venda ({total})"
+                )
 
         # transação — todas as operações abaixo são atômicas
         try:
@@ -219,7 +231,7 @@ class SaleService:
                 )
                 db.add(payment)
 
-            sale.status = SaleStatusEnum.PAID
+            sale.status = SaleStatusEnum.PENDING if is_reservation else SaleStatusEnum.PAID
             sale.closed_at = datetime.now(timezone.utc)
 
             db.commit()
@@ -232,6 +244,29 @@ class SaleService:
         except Exception as e:
             db.rollback()
             raise HTTPException(status_code=500, detail=f"Erro ao finalizar venda: {str(e)}")
+
+    @classmethod
+    def update_order_details(
+        cls,
+        db: Session,
+        sale_id: int,
+        data: dict,
+    ) -> Sale:
+        """Persiste os dados do pedido (cliente, tipo, entrega) sem finalizar a venda."""
+        sale = cls._get_open_sale(db, sale_id)
+
+        updatable_fields = [
+            "customer_name", "notes", "order_type",
+            "delivery_time", "delivery_address", "customer_phone",
+            "delivery_payment_method", "is_paid",
+        ]
+        for field in updatable_fields:
+            if field in data:
+                setattr(sale, field, data[field])
+
+        db.commit()
+        db.refresh(sale)
+        return sale
 
     @classmethod
     def cancel_sale(cls, db: Session, sale_id: int, user_id: int) -> Sale:
@@ -248,7 +283,7 @@ class SaleService:
             raise HTTPException(status_code=400, detail="Venda já cancelada")
 
         try:
-            if sale.status == SaleStatusEnum.PAID:
+            if sale.status in (SaleStatusEnum.PAID, SaleStatusEnum.PENDING):
                 # estorno de estoque
                 for item in sale.items:
                     StockService.add_stock(

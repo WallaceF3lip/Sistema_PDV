@@ -51,7 +51,7 @@ def create_admin(name: str, email: str, password: str):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Cria o primeiro usuário ADMIN")
     parser.add_argument("--name",     default="admin")
-    parser.add_argument("--email",    default="admin@exemple.com")
+    parser.add_argument("--email",    default="admin@gmail.com")
     parser.add_argument("--password", default="admin123")
     args = parser.parse_args()
 

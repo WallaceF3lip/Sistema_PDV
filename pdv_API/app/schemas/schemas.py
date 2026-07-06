@@ -7,7 +7,7 @@ from pydantic import BaseModel, EmailStr, Field, model_validator
 from app.models.user import RoleEnum
 from app.models.product import UnitEnum
 from app.models.stock import MovementTypeEnum
-from app.models.sale import SaleStatusEnum, PaymentMethodEnum
+from app.models.sale import SaleStatusEnum, PaymentMethodEnum, OrderTypeEnum
 
 
 # ─── Auth ────────────────────────────────────────────────────────────────────
@@ -126,7 +126,35 @@ class PaymentIn(BaseModel):
 
 
 class FinalizeSaleRequest(BaseModel):
-    payments: list[PaymentIn] = Field(min_length=1)
+    payments: list[PaymentIn] = []
+
+
+class UpdateOrderDetailsRequest(BaseModel):
+    customer_name: Optional[str] = Field(None, max_length=255)
+    notes: Optional[str] = Field(None, max_length=500)
+    order_type: Optional[OrderTypeEnum] = None
+    # Delivery-specific (required when order_type == DELIVERY)
+    delivery_time: Optional[str] = Field(None, max_length=50)
+    delivery_address: Optional[str] = Field(None, max_length=500)
+    customer_phone: Optional[str] = Field(None, max_length=30)
+    delivery_payment_method: Optional[PaymentMethodEnum] = None
+    is_paid: Optional[bool] = None
+
+    @model_validator(mode="after")
+    def validate_delivery_fields(self):
+        if self.order_type == OrderTypeEnum.DELIVERY:
+            missing = []
+            if not self.delivery_time:
+                missing.append("delivery_time")
+            if not self.delivery_address:
+                missing.append("delivery_address")
+            if not self.customer_phone:
+                missing.append("customer_phone")
+            if missing:
+                raise ValueError(
+                    f"Campos obrigatórios para entrega: {', '.join(missing)}"
+                )
+        return self
 
 
 class SaleItemOut(BaseModel):
@@ -157,6 +185,15 @@ class SaleOut(BaseModel):
     closed_at: Optional[datetime]
     items: list[SaleItemOut] = []
     payments: list[PaymentOut] = []
+    # Order details
+    customer_name: Optional[str] = None
+    notes: Optional[str] = None
+    order_type: Optional[OrderTypeEnum] = None
+    delivery_time: Optional[str] = None
+    delivery_address: Optional[str] = None
+    customer_phone: Optional[str] = None
+    delivery_payment_method: Optional[PaymentMethodEnum] = None
+    is_paid: Optional[bool] = None
 
     model_config = {"from_attributes": True}
 
