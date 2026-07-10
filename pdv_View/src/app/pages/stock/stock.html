@@ -1,77 +1,92 @@
 <div class="stock">
-    <div class="stock__header">
-        <div>
-            <h2 class="headline-lg">Estoque</h2>
-            <p class="body-md text-muted">Controle de inventário</p>
-        </div>
+  <div class="stock__header">
+    <div>
+      <h2 class="headline-lg">Estoque</h2>
+      <p class="body-md text-muted">Controle de inventário</p>
     </div>
+  </div>
 
-    <div class="stock__list">
-        @for (item of stockItems(); track item.id; let i = $index) {
-        <div class="stock-row card animate-slide-up" [style.animation-delay]="(i * 40) + 'ms'">
-            <div class="stock-row__info">
-                <div class="stock-row__name title-md">
-                    {{ item.product.name }}
-                </div>
-                <div class="body-sm text-muted">
-                    Mínimo: {{ item.min_quantity }}
-                </div>
-            </div>
-            <div class="stock-row__quantity">
-                <span class="badge" [class.badge--accent]="item.product.is_active" [class.badge--primary]="!item.product.is_active">
-                    {{ item.quantity }} {{ getProductUnit(item.product.id) }}
-                </span>
-            </div>
-            @if (authService.isAdmin()) {
-            <div class="stock-row__actions">
-                <button class="btn btn-ghost" (click)="openAdjustModal(item, 'in')">+ Entrada</button>
-                <button class="btn btn-ghost" (click)="openAdjustModal(item, 'adjust')">Editar</button>
-            </div>
-            }
-        </div>
-        }
+  <app-data-table [columns]="columns" [data]="stockItems" [loading]="isLoading" emptyMessage="Nenhum item em estoque">
 
-        @if (stockItems().length === 0 && !isLoading) {
-        <div class="stock__empty card">
-            <p class="body-lg text-muted">Nenhum item em estoque</p>
+    <!-- Nome do produto -->
+    <ng-template dtCell="product.name" let-row>
+      <div class="dt-info">
+        <span class="dt-info__title">{{ row.product.name }}</span>
+      </div>
+    </ng-template>
+
+    <!-- SKU do produto -->
+    <ng-template dtCell="product.sku" let-row>
+      <div class="dt-info">
+        <span class="dt-info__title">{{ row.product.sku }}</span>
+      </div>
+    </ng-template>
+
+    <!-- Quantidade com badge de alerta -->
+    <ng-template dtCell="quantity" let-row>
+      <span class="badge"
+        [class.badge--primary]="row.quantity <= row.min_quantity"
+        [class.badge--accent]="row.quantity > row.min_quantity">
+        {{ row.quantity }} {{ row.product.unit }}
+      </span>
+    </ng-template>
+
+    <!-- Mínimo -->
+    <ng-template dtCell="min_quantity" let-row>
+      <span class="body-md text-muted">{{ row.min_quantity }} {{ row.product.unit }}</span>
+    </ng-template>
+
+    <!-- Ações (apenas admin) -->
+    <ng-template dtCell="actions-in" let-row>
+      @if (authService.isAdmin()) {
+        <div class="dt-actions">
+          <button class="btn btn-ghost" (click)="openAdjustModal(row, 'in')">+ Entrada</button>
         </div>
-        }
-    </div>
+      }
+    </ng-template>
+
+    <!-- Ações (apenas admin) -->
+    <ng-template dtCell="actions-edit" let-row>
+      @if (authService.isAdmin()) {
+        <div class="dt-actions">
+          <button class="btn btn-ghost" (click)="openAdjustModal(row, 'adjust')">Editar</button>
+        </div>
+      }
+    </ng-template>
+
+  </app-data-table>
 </div>
 
 @if (showModal) {
 <div class="glass-overlay" (click)="closeModal()">
-    <div class="modal-card card animate-scale-in" (click)="$event.stopPropagation()">
-        <h3 class="headline-md">
-            {{ modalType === 'in' ? 'Entrada de Estoque' : 'Ajuste de Estoque' }} 
-        </h3>
-        <p>{{selectedStock?.product?.name}}</p>
+  <div class="modal-card card animate-scale-in" (click)="$event.stopPropagation()">
+    <h3 class="headline-md">
+      {{ modalType === 'in' ? 'Entrada de Estoque' : 'Ajuste de Estoque' }}
+    </h3>
+    <p class="body-sm text-muted">{{ selectedStock?.product?.name }}</p>
 
-        <form class="modal-form" (ngSubmit)="saveAdjust()">
-            <div class="form-group">
-                <label class="label-sm text-muted">QUANTIDADE</label> 
-                <input class="input-field" type="number" step="0.001" [(ngModel)]="adjustForm.quantity" name="quantity"
-                    required />
-            </div>
-            @if(modalType === 'adjust') {
-            <div class="form-group">
-                <label class="label-sm text-muted">MINIMO</label> 
-                <input class="input-field" type="number" step="0.001" [(ngModel)]="adjustForm.min_quantity" name="min_quantity"
-                    required />
-            </div>
-            }
-            <div class="form-group">
-                <label class="label-sm text-muted">MOTIVO</label>
-                <input class="input-field" [(ngModel)]="adjustForm.reason" name="reason"
-                    placeholder="Ex: Reposição semanal" required />
-            </div>
-            <div class="modal-actions">
-                <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
-                <button type="submit" class="btn btn-primary" [disabled]="isSaving">
-                    {{ isSaving ? 'Salvando...' : 'Confirmar' }}
-                </button>
-            </div>
-        </form>
-    </div>
+    <form class="modal-form" (ngSubmit)="saveAdjust()">
+      <div class="form-group">
+        <label class="label-sm text-muted">QUANTIDADE</label>
+        <input class="input-field" type="number" step="0.001" [(ngModel)]="adjustForm.quantity" name="quantity" required />
+      </div>
+      @if (modalType === 'adjust') {
+        <div class="form-group">
+          <label class="label-sm text-muted">MÍNIMO</label>
+          <input class="input-field" type="number" step="0.001" [(ngModel)]="adjustForm.min_quantity" name="min_quantity" required />
+        </div>
+      }
+      <div class="form-group">
+        <label class="label-sm text-muted">MOTIVO</label>
+        <input class="input-field" [(ngModel)]="adjustForm.reason" name="reason" placeholder="Ex: Reposição semanal" required />
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
+        <button type="submit" class="btn btn-primary" [disabled]="isSaving">
+          {{ isSaving ? 'Salvando...' : 'Confirmar' }}
+        </button>
+      </div>
+    </form>
+  </div>
 </div>
 }

@@ -6,24 +6,32 @@ import { ProductService } from '../../core/services/product.service';
 import { ToastService } from '../../core/services/toast.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Stock, Product, StockAdjust } from '../../core/models';
+import { DataTableComponent, DtCellDirective, TableColumn } from '../../shared/components/data-table/data-table.component';
 
 @Component({
   selector: 'app-stock',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DataTableComponent, DtCellDirective],
   templateUrl: './stock.html',
   styleUrl: './stock.scss',
 })
 export class StockComponent implements OnInit {
   stockItems = signal<Stock[]>([]);
-  products: Product[] = [];
-  isLoading = false;
+  isLoading = signal<boolean>(false);
   showModal = false;
   isSaving = false;
   modalType: 'in' | 'adjust' = 'in';
   selectedStock: Stock | null = null;
-  adjustForm: StockAdjust = { quantity: 0, min_quantity: 0, reason: '' }
+  adjustForm: StockAdjust = { quantity: 0, min_quantity: 0, reason: '' };
 
+  columns: TableColumn[] = [
+    { key: 'product.name', label: 'Produto'},
+    { key: 'product.sku',label: 'SKU'},
+    { key: 'quantity',label: 'Qtd. atual', align: 'center' },
+    { key: 'min_quantity',label: 'Mínimo', align: 'center' },
+    { key: 'actions-in',label: '', align: 'center', width: '80px'},
+    { key: 'actions-edit',label: '', align: 'center', width: '60px'},
+  ];
 
   constructor(
     private stockService: StockService,
@@ -37,30 +45,25 @@ export class StockComponent implements OnInit {
   }
 
   loadData(): void {
-    this.isLoading = true;    
+    this.isLoading.set(true);
     this.stockService.list().subscribe({
       next: (items) => {
-        console.log(items);
         this.stockItems.set(items);
-        this.isLoading = false;
+        this.isLoading.set(false);
       },
       error: () => {
-        this.isLoading = false;
+        this.isLoading.set(false);
       },
     });
-  }
-
-  getProductUnit(productId: number): string {
-    return this.products.find((p) => p.id === productId)?.unit || '';
   }
 
   openAdjustModal(stock: Stock, type: 'in' | 'adjust'): void {
     this.selectedStock = stock;
     this.modalType = type;
-    this.adjustForm = { 
-      quantity: this.modalType === 'in' ? 1 : stock.quantity, 
+    this.adjustForm = {
+      quantity: this.modalType === 'in' ? 1 : stock.quantity,
       min_quantity: stock.min_quantity,
-      reason: ''
+      reason: '',
     };
     this.showModal = true;
   }
@@ -74,7 +77,7 @@ export class StockComponent implements OnInit {
     if (!this.selectedStock) return;
     this.isSaving = true;
 
-    if(this.adjustForm.reason === '' || this.adjustForm.reason === null){
+    if (!this.adjustForm.reason) {
       this.toastService.error('Preencha o campo Motivo!');
       this.isSaving = false;
       return;

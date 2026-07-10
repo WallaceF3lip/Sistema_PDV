@@ -5,21 +5,31 @@ import { ProductService } from '../../core/services/product.service';
 import { ToastService } from '../../core/services/toast.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Product, ProductCreate, UnitEnum } from '../../core/models';
+import { DataTableComponent, DtCellDirective, TableColumn } from '../../shared/components/data-table/data-table.component';
 
 @Component({
   selector: 'app-products',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DataTableComponent, DtCellDirective],
   templateUrl: './products.html',
   styleUrl: './products.scss',
 })
 export class ProductsComponent implements OnInit {
   products = signal<Product[]>([]);
-  isLoading = false;
+  isLoading = signal<boolean>(false);
   showModal = false;
   isSaving = false;
   editingProduct: Product | null = null;
 
+  columns: TableColumn[] = [
+    { key: 'name', label: 'Produto'},
+    { key: 'sku', label: 'SKU'},
+    { key: 'cost_price', label: 'Custo'},
+    { key: 'sale_price', label: 'Venda'},
+    { key: 'unit', label: 'Unidade', width: '100px', align: 'center' },
+    { key: 'is_active', label: 'Ativo', width: '80px', align: 'center' },
+    { key: 'actions', label: '', width: '80px', align: 'center' },
+  ];
 
   form: ProductCreate = {
     sku: '',
@@ -40,14 +50,14 @@ export class ProductsComponent implements OnInit {
   }
 
   loadProducts(): void {
-    this.isLoading = true;
+    this.isLoading.set(true);
     this.productService.list(false).subscribe({
-      next: (products) => {
-        this.products.set(products);
-        this.isLoading = false;
+      next: (list) => {
+        this.products.set(list);
+        this.isLoading.set(false);
       },
       error: () => {
-        this.isLoading = false;
+        this.isLoading.set(false);
       },
     });
   }
@@ -77,7 +87,6 @@ export class ProductsComponent implements OnInit {
 
   saveProduct(): void {
     this.isSaving = true;
-
     if (this.editingProduct) {
       this.productService.update(this.editingProduct.id, this.form).subscribe({
         next: () => {
@@ -102,15 +111,15 @@ export class ProductsComponent implements OnInit {
   }
 
   toggleProduct(product: Product): void {
-    this.productService
-      .update(product.id, { is_active: !product.is_active })
-      .subscribe({
-        next: () => {
-          product.is_active = !product.is_active;
-          this.toastService.success(
-            product.is_active ? 'Produto ativado' : 'Produto desativado'
-          );
-        },
-      });
+    this.productService.update(product.id, { is_active: !product.is_active }).subscribe({
+      next: () => {
+        this.products.update(list =>
+          list.map(p => p.id === product.id ? { ...p, is_active: !product.is_active } : p)
+        );
+        this.toastService.success(
+          !product.is_active ? 'Produto ativado' : 'Produto desativado'
+        );
+      },
+    });
   }
 }
