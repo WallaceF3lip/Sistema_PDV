@@ -2,6 +2,7 @@ import { UnitEnum } from "./product.model";
 
 export enum SaleStatusEnum {
   OPEN = 'OPEN',
+  PENDING = 'PENDING',
   PAID = 'PAID',
   CANCELED = 'CANCELED',
 }
@@ -10,6 +11,11 @@ export enum PaymentMethodEnum {
   CASH = 'CASH',
   CARD = 'CARD',
   PIX = 'PIX',
+}
+
+export enum OrderTypeEnum {
+  PICKUP = 'PICKUP',
+  DELIVERY = 'DELIVERY',
 }
 
 export interface SaleItem {
@@ -36,6 +42,15 @@ export interface Sale {
   closed_at: string | null;
   items: SaleItem[];
   payments: Payment[];
+  // Order details
+  customer_name?: string | null;
+  notes?: string | null;
+  order_type?: OrderTypeEnum | null;
+  delivery_time?: string | null;
+  delivery_address?: string | null;
+  customer_phone?: string | null;
+  delivery_payment_method?: PaymentMethodEnum | null;
+  is_paid?: boolean | null;
 }
 
 export interface AddItemRequest {
@@ -50,4 +65,15 @@ export interface PaymentIn {
 
 export interface FinalizeSaleRequest {
   payments: PaymentIn[];
+}
+
+export interface UpdateOrderDetailsRequest {
+  customer_name?: string | null;
+  notes?: string | null;
+  order_type?: OrderTypeEnum | null;
+  delivery_time?: string | null;
+  delivery_address?: string | null;
+  customer_phone?: string | null;
+  delivery_payment_method?: PaymentMethodEnum | null;
+  is_paid?: boolean | null;
 }

@@ -1,0 +1,56 @@
+<div class="dt-wrapper card">
+  <div class="dt-scroll">
+    <table class="dt-table">
+      <thead class="dt-thead">
+        <tr>
+          @for (col of columns; track col.key) {
+            <th
+              class="dt-th label-sm"
+              [style.width]="col.width ?? 'auto'"
+              [attr.data-align]="col.align ?? 'left'"
+            >
+              {{ col.label }}
+            </th>
+          }
+        </tr>
+      </thead>
+
+      <tbody class="dt-tbody">
+        @if (loading()) {
+          @for (_ of [1, 2, 3, 4, 5]; track $index) {
+            <tr class="dt-tr dt-tr--skeleton">
+              @for (col of columns; track col.key) {
+                <td class="dt-td">
+                  <div class="dt-skeleton"></div>
+                </td>
+              }
+            </tr>
+          }
+        } @else if (_rows().length === 0) {
+          <tr class="dt-tr">
+            <td class="dt-td dt-td--empty body-md text-muted" [attr.colspan]="columns.length">
+              {{ emptyMessage }}
+            </td>
+          </tr>
+        } @else {
+          @for (row of _rows(); track $index) {
+            <tr class="dt-tr animate-slide-up" [style.animation-delay]="($index * 30) + 'ms'">
+              @for (col of columns; track col.key) {
+                <td class="dt-td" [attr.data-align]="col.align ?? 'left'">
+                  @if (getCellTemplate(col.key); as tpl) {
+                    <ng-container
+                      [ngTemplateOutlet]="tpl"
+                      [ngTemplateOutletContext]="{ $implicit: row, row: row }"
+                    />
+                  } @else {
+                    <span class="body-md">{{ getValue(row, col.key) }}</span>
+                  }
+                </td>
+              }
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

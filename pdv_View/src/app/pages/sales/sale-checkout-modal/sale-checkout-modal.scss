@@ -1,0 +1,564 @@
+// ─── Modal Container ──────────────────────────────────────────────────────────
+.checkout-modal {
+  width: 100%;
+  max-width: min(540px, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  @media (min-width: 768px) {
+    max-width: min(580px, calc(100vw - 4rem));
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-4) var(--space-5) var(--space-3);
+    flex-shrink: 0;
+    border-bottom: 1px solid rgba(223, 191, 188, 0.10);
+  }
+
+  &__close {
+    flex-shrink: 0;
+  }
+
+  &__body {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+
+    @media (min-width: 768px) {
+      padding: var(--space-6);
+    }
+  }
+
+  &__title {
+    margin-bottom: var(--space-1);
+  }
+
+  &__footer {
+    padding: var(--space-4) var(--space-5);
+    flex-shrink: 0;
+    border-top: 1px solid rgba(223, 191, 188, 0.10);
+
+    @media (min-width: 768px) {
+      padding: var(--space-4) var(--space-6);
+    }
+
+    &--row {
+      display: flex;
+      gap: var(--space-3);
+
+      .btn-ghost {
+        flex-shrink: 0;
+      }
+
+      .btn-primary {
+        flex: 1;
+      }
+    }
+  }
+
+  &__summary {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-4);
+    background: var(--color-surface-high);
+    border-radius: var(--radius-card);
+    text-align: center;
+    margin-top: var(--space-2);
+  }
+}
+
+// ─── Step Indicator ───────────────────────────────────────────────────────────
+.checkout-steps {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.checkout-step {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-surface-high);
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+
+  &--active {
+    background: var(--color-primary);
+    color: #fff;
+    box-shadow: var(--shadow-coral);
+  }
+
+  &--done {
+    background: rgba(72, 187, 120, 0.2);
+    color: #276749;
+  }
+
+  &__line {
+    height: 2px;
+    width: 24px;
+    background: var(--color-surface-high);
+    border-radius: 1px;
+    flex-shrink: 0;
+  }
+}
+
+// ─── Total do Pedido ─────────────────────────────────────────────────────────
+.checkout-total {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2rem, 1.5rem + 2vw, 3rem);
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+
+// ─── Tipo de Pedido Selector ─────────────────────────────────────────────────
+.checkout-type-selector {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.checkout-type-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-2);
+  min-height: 90px;
+  background: var(--color-surface-high);
+  border: 2px solid transparent;
+  border-radius: var(--radius-card);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+
+  @media (min-width: 480px) {
+    min-height: 110px;
+    padding: var(--space-5) var(--space-3);
+  }
+
+  &__icon {
+    font-size: 1.75rem;
+  }
+
+  &__label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    color: var(--color-muted);
+    transition: color var(--transition-fast);
+  }
+
+  &:hover {
+    border-color: var(--color-muted);
+  }
+
+  &--active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-coral);
+
+    .checkout-type-btn__label {
+      color: #fff;
+    }
+  }
+}
+
+// ─── Form ────────────────────────────────────────────────────────────────────
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+
+  &--half {
+    flex: 1;
+  }
+
+  .label-sm {
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+}
+
+.form-row {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.input-field--sm {
+  height: 40px;
+  font-size: 0.875rem;
+  padding: var(--space-2) var(--space-3);
+}
+
+.input-field--error {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px rgba(224, 93, 83, 0.2);
+}
+
+.required-mark {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+// ─── Delivery Fields Block ────────────────────────────────────────────────────
+.delivery-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: rgba(52, 140, 167, 0.06);
+  border: 1px solid rgba(52, 140, 167, 0.15);
+  border-radius: var(--radius-card);
+
+  &__header {
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: #2a7a96;
+    text-transform: uppercase;
+  }
+}
+
+.delivery-payment-row {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.delivery-method-btns {
+  display: flex;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+}
+
+.delivery-method-btn {
+  padding: var(--space-1) var(--space-2);
+  border: 2px solid var(--color-surface-high);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+
+  &:hover {
+    border-color: var(--color-muted);
+  }
+
+  &--active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #fff;
+    box-shadow: var(--shadow-coral);
+  }
+}
+
+.paid-toggle {
+  flex-shrink: 0;
+}
+
+.paid-btn {
+  height: 40px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-card);
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+
+  &--yes {
+    background: rgba(72, 187, 120, 0.15);
+    border-color: rgba(72, 187, 120, 0.4);
+    color: #276749;
+  }
+
+  &--no {
+    background: rgba(255, 166, 0, 0.12);
+    border-color: rgba(255, 166, 0, 0.3);
+    color: #b07800;
+  }
+}
+
+// ─── Info / Validation badges ─────────────────────────────────────────────────
+.info-badge {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-card);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.4;
+
+  &--success {
+    background: rgba(72, 187, 120, 0.12);
+    border: 1px solid rgba(72, 187, 120, 0.3);
+    color: #276749;
+  }
+
+  &--info {
+    background: rgba(52, 140, 167, 0.10);
+    border: 1px solid rgba(52, 140, 167, 0.25);
+    color: #2a7a96;
+  }
+}
+
+.validation-error {
+  padding: var(--space-2) var(--space-3);
+  background: rgba(224, 93, 83, 0.10);
+  border: 1px solid rgba(224, 93, 83, 0.3);
+  border-radius: var(--radius-card);
+  color: var(--color-primary);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+// ─── Payment (migrado de sales.scss) ─────────────────────────────────────────
+.payment-modal__amount {
+  text-align: center;
+
+  .label-sm {
+    display: block;
+    margin-bottom: var(--space-2);
+  }
+}
+
+.payment-total {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2rem, 1.5rem + 3vw, 4rem);
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+  word-break: break-word;
+}
+
+.payment-entries {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+
+  @media (min-width: 768px) {
+    gap: var(--space-4);
+  }
+}
+
+.payment-entry {
+  display: grid;
+  grid-template-rows: auto auto;
+  padding: var(--space-4);
+  background: var(--color-surface-high);
+  border-radius: var(--radius-card);
+  position: relative;
+
+  @media (min-width: 480px) {
+    grid-template-columns: 1fr auto auto;
+    grid-template-rows: auto;
+    align-items: center;
+  }
+
+  &__methods {
+    display: flex;
+    gap: var(--space-2);
+
+    @media (min-width: 480px) {
+      grid-column: 1;
+      flex-wrap: nowrap;
+    }
+  }
+
+  &__value {
+    grid-column: 1;
+    grid-row: 2;
+    margin-bottom: 3%;
+
+    @media (min-width: 480px) {
+      grid-row: 1;
+      min-width: 120px;
+    }
+
+    .label-sm {
+      display: block;
+      margin-bottom: var(--space-1);
+    }
+
+    .cash-input {
+      width: 100%;
+    }
+  }
+
+  &__remove {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: baseline;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(224, 93, 83, 0.10);
+    color: var(--color-primary);
+    font-size: 0.875rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+
+    @media (min-width: 480px) {
+      grid-column: 3;
+      grid-row: 1;
+      align-self: baseline;
+    }
+
+    &:hover {
+      background: var(--color-primary);
+      color: #fff;
+    }
+  }
+}
+
+.tender-btn {
+  flex: 1;
+  min-width: calc(33% - var(--space-3));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 90px;
+  background: var(--color-surface);
+  border: 2px solid var(--color-surface-high);
+  border-radius: var(--radius-card);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  padding: var(--space-3);
+
+  @media (min-width: 480px) {
+    min-height: 120px;
+    padding: var(--space-4);
+  }
+
+  &__icon {
+    font-size: clamp(1.5rem, 1rem + 1vw, 2rem);
+  }
+
+  &__label {
+    color: var(--color-muted);
+    transition: color var(--transition-fast);
+    font-size: clamp(0.8125rem, 0.75rem + 0.25vw, 1rem);
+  }
+
+  &:hover {
+    border-color: var(--color-muted);
+  }
+
+  &--active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-coral);
+
+    .tender-btn__label {
+      color: #fff;
+    }
+  }
+
+  &--compact {
+    flex: 1;
+    min-width: 0;
+    min-height: 60px;
+    padding: var(--space-2);
+
+    @media (min-width: 480px) {
+      min-height: 72px;
+      padding: var(--space-3);
+    }
+
+    .tender-btn__icon {
+      font-size: 1.125rem;
+    }
+
+    .tender-btn__label {
+      font-size: 0.75rem;
+    }
+  }
+}
+
+.cash-input {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.125rem, 1rem + 0.5vw, 1.5rem);
+  text-align: center;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.remaining-badge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  background: rgba(255, 166, 0, 0.12);
+  border: 1px solid rgba(255, 166, 0, 0.3);
+  border-radius: var(--radius-card);
+
+  .label-sm {
+    color: #b07800;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+
+  &__value {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.125rem;
+    color: #b07800;
+  }
+}
+
+.payment-add-btn {
+  border: 2px dashed var(--color-surface-high);
+  color: var(--color-muted);
+  font-size: 0.9375rem;
+  min-height: 48px;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: rgba(224, 93, 83, 0.05);
+  }
+}
+
+.change-display {
+  text-align: center;
+
+  .label-sm {
+    display: block;
+    margin-bottom: var(--space-1);
+  }
+}
+
+// ─── Inline field validation message ─────────────────────────────────────────
+.validation-msg {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  animation: fadeIn var(--transition-fast);
+}

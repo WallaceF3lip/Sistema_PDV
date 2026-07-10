@@ -1,0 +1,183 @@
+// ─── DataTable Component ─────────────────────────────────────────────────────
+// Estilo inspirado nos tokens do projeto: sem bordas externas nas células,
+// separadores sutis, hover suave, header com surface-low.
+
+.dt-wrapper {
+  padding: 0;
+  overflow: hidden;
+}
+
+// Scroll horizontal em telas pequenas
+.dt-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+
+  // Scrollbar discreta, no estilo do projeto
+  &::-webkit-scrollbar {
+    height: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-surface-high);
+    border-radius: 100px;
+  }
+}
+
+.dt-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+}
+
+// ─── Cabeçalho ───────────────────────────────────────────────────────────────
+.dt-thead {
+  background: var(--color-surface-low);
+
+  tr {
+    border-bottom: 1.5px solid var(--color-surface-high);
+  }
+}
+
+.dt-th {
+  padding: var(--space-4) var(--space-5);
+  text-align: left;
+  color: var(--color-muted);
+  font-family: var(--font-label);
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  user-select: none;
+
+  &:first-child {
+    border-radius: var(--radius-card) 0 0 0;
+    padding-left: var(--space-6);
+  }
+
+  &:last-child {
+    border-radius: 0 var(--radius-card) 0 0;
+    padding-right: var(--space-6);
+  }
+
+  &[data-align='center'] { text-align: center; }
+  &[data-align='right']  { text-align: right; }
+}
+
+// ─── Corpo ───────────────────────────────────────────────────────────────────
+.dt-tbody {
+  .dt-tr {
+    border-bottom: 1px solid var(--color-surface-high);
+    transition: background var(--transition-fast);
+    animation-fill-mode: both;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &:hover {
+      background: var(--color-surface-low);
+    }
+
+    &--skeleton {
+      pointer-events: none;
+
+      &:hover {
+        background: transparent;
+      }
+    }
+  }
+}
+
+.dt-td {
+  padding: var(--space-4) var(--space-5);
+  vertical-align: middle;
+  color: var(--color-text);
+
+  &:first-child { padding-left: var(--space-6); }
+  &:last-child  { padding-right: var(--space-6); }
+
+  &[data-align='center'] { text-align: center; }
+  &[data-align='right']  { text-align: right; }
+
+  // Estado vazio centralizado
+  &--empty {
+    text-align: center;
+    padding: var(--space-9) var(--space-5);
+    color: var(--color-muted);
+  }
+}
+
+// ─── Skeleton loading ────────────────────────────────────────────────────────
+.dt-skeleton {
+  height: 18px;
+  border-radius: var(--radius-button);
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-high) 25%,
+    var(--color-surface-dim) 50%,
+    var(--color-surface-high) 75%
+  );
+  background-size: 200% 100%;
+  animation: dt-shimmer 1.4s ease-in-out infinite;
+  width: 75%;
+  max-width: 180px;
+}
+
+@keyframes dt-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+// ─── Célula de ações (alinha botões ao centro vertical) ──────────────────────
+.dt-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: nowrap;
+}
+
+// ─── Info com título + subtítulo (padrão nome+email, nome+sku etc.) ──────────
+.dt-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+
+  &__title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__sub {
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: var(--color-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+// ─── Avatar circular (inicial do usuário) ────────────────────────────────────
+.dt-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-surface-high);
+  color: var(--color-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1rem;
+  flex-shrink: 0;
+}

@@ -1,7 +1,7 @@
 import enum
 from datetime import datetime
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Numeric, String, func
+from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Numeric, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -9,6 +9,7 @@ from app.core.database import Base
 
 class SaleStatusEnum(str, enum.Enum):
     OPEN = "OPEN"
+    PENDING = "PENDING"
     PAID = "PAID"
     CANCELED = "CANCELED"
 
@@ -17,6 +18,11 @@ class PaymentMethodEnum(str, enum.Enum):
     CASH = "CASH"
     CARD = "CARD"
     PIX = "PIX"
+
+
+class OrderTypeEnum(str, enum.Enum):
+    PICKUP = "PICKUP"
+    DELIVERY = "DELIVERY"
 
 
 class Sale(Base):
@@ -34,6 +40,21 @@ class Sale(Base):
         DateTime(timezone=True), server_default=func.now()
     )
     closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    # ─── Order Details ────────────────────────────────────────────────────────
+    customer_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    notes: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    order_type: Mapped[OrderTypeEnum | None] = mapped_column(
+        Enum(OrderTypeEnum), nullable=True
+    )
+    # Delivery-specific fields
+    delivery_time: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    delivery_address: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    customer_phone: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    delivery_payment_method: Mapped[PaymentMethodEnum | None] = mapped_column(
+        Enum(PaymentMethodEnum, name="payment_method_delivery_enum"), nullable=True
+    )
+    is_paid: Mapped[bool | None] = mapped_column(Boolean, nullable=True, default=None)
 
     user: Mapped["User"] = relationship("User", back_populates="sales")
     items: Mapped[list["SaleItem"]] = relationship(

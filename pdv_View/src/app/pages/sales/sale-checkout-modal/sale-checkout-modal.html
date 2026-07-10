@@ -1,0 +1,246 @@
+<div class="glass-overlay" (click)="close()">
+  <div class="checkout-modal card animate-scale-in" (click)="$event.stopPropagation()">
+
+    <!-- ─── Cabeçalho ─────────────────────────────────────────────────── -->
+    <div class="checkout-modal__header">
+      <div class="checkout-steps">
+        <span class="checkout-step" [class.checkout-step--active]="currentStep() === CheckoutStep.TYPE">
+          1
+        </span>
+        @if (!isCounter()) {
+        <span class="checkout-step__line"></span>
+        <span class="checkout-step" [class.checkout-step--active]="currentStep() === CheckoutStep.DETAILS"
+          [class.checkout-step--done]="currentStep() === CheckoutStep.PAYMENT">
+          2
+        </span>
+        }
+        <span class="checkout-step__line"></span>
+        <span class="checkout-step" [class.checkout-step--active]="currentStep() === CheckoutStep.PAYMENT"
+          [class.checkout-step--done]="false">
+          {{ isCounter() ? '2' : '3' }}
+        </span>
+      </div>
+
+      <button class="btn btn-ghost checkout-modal__close" (click)="close()" aria-label="Fechar">✕</button>
+    </div>
+
+    <!-- ─── ETAPA 1: Tipo de Pedido ───────────────────────────────────── -->
+    @if (currentStep() === CheckoutStep.TYPE) {
+    <div class="checkout-modal__body animate-fade-in">
+      <h3 class="headline-md checkout-modal__title">Como é esse pedido?</h3>
+
+      <div class="checkout-type-selector">
+        @for (type of orderTypes; track type.label) {
+        <button class="checkout-type-btn" [class.checkout-type-btn--active]="orderType() === type.value"
+          (click)="orderType.set(type.value)" [attr.aria-label]="type.label">
+          <span class="checkout-type-btn__icon">{{ type.icon }}</span>
+          <span class="checkout-type-btn__label">{{ type.label }}</span>
+        </button>
+        }
+      </div>
+
+      <!-- Campos de cliente e observação — visíveis para todos os tipos -->
+      <div class="form-group">
+        <label class="label-sm text-muted" for="co-customer-name">
+          CLIENTE <span class="required-mark">*</span>
+        </label>
+        <input id="co-customer-name" class="input-field input-field--sm" type="text"
+          [class.input-field--error]="showTypeValidationErrors() && !customerName().trim()"
+          placeholder="Nome do cliente" [ngModel]="customerName()"
+          (ngModelChange)="customerName.set($event); showTypeValidationErrors.set(false)" />
+        @if (showTypeValidationErrors() && !customerName().trim()) {
+          <span class="validation-msg">Informe o nome do cliente para continuar.</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label class="label-sm text-muted" for="co-notes">OBSERVAÇÃO</label>
+        <textarea id="co-notes" class="input-field input-field--sm" placeholder="Observações do pedido..." rows="2"
+          [ngModel]="notes()" (ngModelChange)="notes.set($event)"></textarea>
+      </div>
+
+      <div class="checkout-modal__summary">
+        <span class="label-sm text-muted">TOTAL DO PEDIDO</span>
+        <span class="checkout-total">R$ {{ sale.total_amount | number:'1.2-2' }}</span>
+        <span class="label-sm text-muted">{{ sale.items.length }} {{ sale.items.length === 1 ? 'item' : 'itens'
+          }}</span>
+      </div>
+    </div>
+
+    <div class="checkout-modal__footer">
+      <button class="btn btn-primary btn-lg btn-block" [disabled]="isProcessing()" (click)="advanceStep()">
+        {{ isProcessing() ? 'Salvando...' : 'Continuar' }}
+      </button>
+    </div>
+    }
+
+    <!-- ─── ETAPA 2: Detalhes do Pedido ───────────────────────────────── -->
+    @if (currentStep() === CheckoutStep.DETAILS) {
+    <div class="checkout-modal__body animate-fade-in">
+      <h3 class="headline-md checkout-modal__title">
+        {{ isDelivery() ? '🚚 Detalhes da Entrega' : '🏪 Detalhes da Retirada' }}
+      </h3>
+
+      <!-- Campos de entrega/retirada -->
+      <div class="delivery-fields">
+        <div class="delivery-fields__header label-sm">
+          {{ isDelivery() ? 'DADOS DE ENTREGA' : 'DADOS DE RETIRADA' }}
+        </div>
+
+        <div class="form-row">
+          <div class="form-group form-group--half">
+            <label class="label-sm text-muted" for="co-time">
+              HORÁRIO <span class="required-mark">*</span>
+            </label>
+            <input id="co-time" class="input-field input-field--sm input-field--time"
+              [class.input-field--error]="showValidationErrors() && !deliveryTime()" type="time"
+              [ngModel]="deliveryTime()" (ngModelChange)="deliveryTime.set($event)" />
+          </div>
+          <div class="form-group form-group--half">
+            <label class="label-sm text-muted" for="co-phone">
+              TELEFONE <span class="required-mark">*</span>
+            </label>
+            <input id="co-phone" class="input-field input-field--sm"
+              [class.input-field--error]="showValidationErrors() && !customerPhone().trim()" type="tel"
+              placeholder="(00) 00000-0000" mask="(00) 00000-0000" [ngModel]="customerPhone()" (ngModelChange)="customerPhone.set($event)" />
+          </div>
+        </div>
+
+        @if (isDelivery()) {
+        <div class="form-group">
+          <label class="label-sm text-muted" for="co-address">
+            ENDEREÇO <span class="required-mark">*</span>
+          </label>
+          <input id="co-address" class="input-field input-field--sm"
+            [class.input-field--error]="showValidationErrors() && !deliveryAddress().trim()" type="text"
+            placeholder="Rua, número, bairro..." [ngModel]="deliveryAddress()"
+            (ngModelChange)="deliveryAddress.set($event)" />
+        </div>
+        }
+
+        <!-- Forma de pagamento prevista -->
+        <div class="delivery-payment-row">
+          <div class="form-group">
+            <label class="label-sm text-muted">
+              {{ isDelivery() ? 'PGTO. ENTREGA' : 'PGTO. RETIRADA' }}
+            </label>
+            <div class="delivery-method-btns">
+              @for (method of paymentMethods; track method.value) {
+              <button class="delivery-method-btn"
+                [class.delivery-method-btn--active]="deliveryPaymentMethod() === method.value"
+                (click)="deliveryPaymentMethod.set(deliveryPaymentMethod() === method.value ? null : method.value)"
+                [attr.aria-label]="method.label">
+                {{ method.icon }} {{ method.label }}
+              </button>
+              }
+            </div>
+          </div>
+
+          <div class="form-group paid-toggle">
+            <label class="label-sm text-muted">JÁ PAGO?</label>
+            <button class="paid-btn" [class.paid-btn--yes]="isPaid()" [class.paid-btn--no]="!isPaid()"
+              (click)="isPaid.set(!isPaid())" [attr.aria-pressed]="isPaid()">
+              {{ isPaid() ? '✅ Sim' : '⏳ Não' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Info badge -->
+        @if (isPaid()) {
+        <div class="info-badge info-badge--success animate-fade-in">
+          ✅ Pago — será finalizado com confirmação de pagamento
+        </div>
+        } @else if (isDelivery()) {
+        <div class="info-badge info-badge--info animate-fade-in">
+          🚚 Reserva — finalizado sem pagamento imediato
+        </div>
+        } @else {
+        <div class="info-badge info-badge--info animate-fade-in">
+          🏪 Pagar na retirada
+        </div>
+        }
+      </div>
+
+      @if (showValidationErrors() && !deliveryFieldsValid()) {
+      <div class="validation-error animate-fade-in">
+        ⚠️ Preencha os campos obrigatórios antes de continuar.
+      </div>
+      }
+    </div>
+
+    <div class="checkout-modal__footer checkout-modal__footer--row">
+      <button class="btn btn-ghost btn-lg" (click)="goBack()">Voltar</button>
+      <button class="btn btn-primary btn-lg" [disabled]="isProcessing()" (click)="confirmDetails()">
+        {{ isProcessing() ? 'Salvando...' : (isPaid() ? 'Ir para Pagamento' : (isDelivery() ? '🚚 Reservar' : 
+        '🏪 Confirmar Retirada')) }}
+      </button>
+    </div>
+    }
+
+    <!-- ─── ETAPA 3: Pagamento ─────────────────────────────────────────── -->
+    @if (currentStep() === CheckoutStep.PAYMENT) {
+    <div class="checkout-modal__body animate-fade-in">
+      <h3 class="headline-md checkout-modal__title">Pagamento</h3>
+
+      <div class="payment-modal__amount">
+        <span class="label-sm text-muted">VALOR A PAGAR</span>
+        <span class="payment-total">R$ {{ sale.total_amount | number:'1.2-2' }}</span>
+      </div>
+
+      <!-- Entradas de pagamento misto -->
+      <div class="payment-entries">
+        @for (entry of paymentEntries(); track $index; let i = $index) {
+        <div class="payment-entry">
+          @if (i > 0) {
+          <button class="payment-entry__remove" (click)="removePaymentEntry(i)"
+            aria-label="Remover forma de pagamento">✕</button>
+          }
+          <div class="payment-entry__methods">
+            @for (method of paymentMethods; track method.value) {
+            <button class="tender-btn tender-btn--compact" [class.tender-btn--active]="entry.method === method.value"
+              (click)="updateEntryMethod(i, method.value)" [attr.aria-label]="method.label">
+              <span class="tender-btn__icon">{{ method.icon }}</span>
+              <span class="tender-btn__label">{{ method.label }}</span>
+            </button>
+            }
+          </div>
+          <div class="payment-entry__value">
+            <label class="label-sm text-muted">VALOR:</label>
+            <input class="input-field cash-input" type="number" step="0.5" min="0.5" [ngModel]="entry.amount"
+              (ngModelChange)="updateEntryAmount(i, $event)" />
+          </div>
+        </div>
+        }
+      </div>
+
+      @if (remainingAmount() > 0.01) {
+      <div class="remaining-badge animate-fade-in">
+        <span class="label-sm">RESTANTE</span>
+        <span class="remaining-badge__value">R$ {{ remainingAmount() | number:'1.2-2' }}</span>
+      </div>
+      }
+
+      @if (changeAmount() > 0) {
+      <div class="change-display animate-fade-in">
+        <span class="label-sm text-muted">TROCO</span>
+        <span class="headline-lg text-accent">R$ {{ changeAmount() | number:'1.2-2' }}</span>
+      </div>
+      }
+
+      @if (canAddEntry()) {
+      <button class="btn btn-ghost btn-block payment-add-btn" (click)="addPaymentEntry()">
+        + Adicionar forma de pagamento
+      </button>
+      }
+    </div>
+
+    <div class="checkout-modal__footer checkout-modal__footer--row">
+      <button class="btn btn-ghost btn-lg" (click)="goBack()">Voltar</button>
+      <button class="btn btn-primary btn-lg" [disabled]="!canFinalize() || isProcessing()" (click)="finalizeSale()">
+        {{ isProcessing() ? 'Processando...' : 'Finalizar Venda' }}
+      </button>
+    </div>
+    }
+
+  </div>
+</div>

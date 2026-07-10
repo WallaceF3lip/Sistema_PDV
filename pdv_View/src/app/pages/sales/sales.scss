@@ -78,6 +78,7 @@
   grid-template-columns: repeat(auto-fill, minmax(min(140px, 100%), 1fr));
   gap: var(--space-3);
   flex: 1;
+  align-content: start;
 
   @media (min-width: 480px) {
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -253,137 +254,6 @@
   }
 }
 
-// ─── Payment Modal ───────────────────────────────────────────────────────────
-.payment-modal {
-  width: 100%;
-  max-width: min(520px, calc(100vw - 2rem));
-  padding: var(--space-5);
-  max-height: calc(100vh - 2rem);
-  max-height: calc(100dvh - 2rem);
-  overflow-y: auto;
-
-  @media (min-width: 768px) {
-    padding: var(--space-6);
-  }
-
-  &__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: var(--space-5);
-
-    @media (min-width: 768px) {
-      margin-bottom: var(--space-6);
-    }
-  }
-
-  &__amount {
-    text-align: center;
-    margin-bottom: var(--space-5);
-
-    @media (min-width: 768px) {
-      margin-bottom: var(--space-6);
-    }
-
-    .label-sm {
-      display: block;
-      margin-bottom: var(--space-2);
-    }
-  }
-
-  &__methods {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-3);
-    margin-bottom: var(--space-5);
-
-    @media (min-width: 480px) {
-      flex-wrap: nowrap;
-      gap: var(--space-4);
-    }
-
-    @media (min-width: 768px) {
-      margin-bottom: var(--space-6);
-    }
-  }
-
-  &__cash {
-    margin-bottom: var(--space-5);
-  }
-}
-
-.payment-total {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: clamp(2rem, 1.5rem + 3vw, 4rem);
-  letter-spacing: -0.02em;
-  color: var(--color-text);
-  word-break: break-word;
-}
-
-.tender-btn {
-  flex: 1;
-  min-width: calc(33% - var(--space-3));
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  min-height: 90px;
-  background: var(--color-surface);
-  border: 2px solid var(--color-surface-high);
-  border-radius: var(--radius-card);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  padding: var(--space-3);
-
-  @media (min-width: 480px) {
-    min-height: 120px;
-    padding: var(--space-4);
-  }
-
-  &__icon {
-    font-size: clamp(1.5rem, 1rem + 1vw, 2rem);
-  }
-
-  &__label {
-    color: var(--color-muted);
-    transition: color var(--transition-fast);
-    font-size: clamp(0.8125rem, 0.75rem + 0.25vw, 1rem);
-  }
-
-  &:hover {
-    border-color: var(--color-muted);
-  }
-
-  &--active {
-    background: var(--color-primary);
-    border-color: var(--color-primary);
-    box-shadow: var(--shadow-coral);
-
-    .tender-btn__label {
-      color: #fff;
-    }
-  }
-}
-
-.cash-input {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: clamp(1.125rem, 1rem + 0.5vw, 1.5rem);
-  text-align: center;
-}
-
-.change-display {
-  text-align: center;
-  margin-top: var(--space-4);
-
-  .label-sm {
-    display: block;
-    margin-bottom: var(--space-1);
-  }
-}
-
 // ─── Quantity Edit Modal ─────────────────────────────────────────────────────
 .quantity-modal {
   width: 100%;
@@ -434,4 +304,16 @@
   font-weight: 700;
   font-size: clamp(1.125rem, 1rem + 0.5vw, 1.5rem);
   text-align: center;
+}
+
+// ─── Form helpers (usados no quantity modal) ──────────────────────────────────
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+
+  .label-sm {
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
 }

@@ -4,13 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { SaleService } from '../../core/services/sale.service';
 import { ProductService } from '../../core/services/product.service';
 import { ToastService } from '../../core/services/toast.service';
-import { Sale, Product, PaymentMethodEnum, PaymentIn, SaleItem } from '../../core/models';
+import { Sale, Product, SaleItem } from '../../core/models';
+import { SaleCheckoutModalComponent } from './sale-checkout-modal/sale-checkout-modal.component';
 
 @Component({
   selector: 'app-sales',
   standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl:'./sales.html',
+  imports: [CommonModule, FormsModule, SaleCheckoutModalComponent],
+  templateUrl: './sales.html',
   styleUrl: './sales.scss',
 })
 export class SalesComponent implements OnInit {
@@ -20,22 +21,13 @@ export class SalesComponent implements OnInit {
   searchQuery = signal('');
   tappedId = signal<number | null>(null);
 
-  // Payment
-  showPayment = signal(false);
-  selectedMethod = signal<PaymentMethodEnum>(PaymentMethodEnum.PIX);
-  cashReceived = signal(0);
-  isProcessing = signal(false);
+  // Checkout modal
+  showCheckoutModal = signal(false);
 
   // Edit quantity (KG items)
   showEditQuantity = signal(false);
   editingItem = signal<SaleItem | null>(null);
   newQuantity = signal(0);
-
-  paymentMethods = [
-    { value: PaymentMethodEnum.PIX, label: 'PIX', icon: '⚡' },
-    { value: PaymentMethodEnum.CARD, label: 'Cartão', icon: '💳' },
-    { value: PaymentMethodEnum.CASH, label: 'Dinheiro', icon: '💵' },
-  ];
 
   filteredProducts = computed(() => {
     const query = this.searchQuery().trim().toLowerCase();
@@ -46,37 +38,15 @@ export class SalesComponent implements OnInit {
     );
   });
 
-  changeAmount = computed(() => {
-    const sale = this.currentSale();
-    const received = this.cashReceived();
-    if (sale && received > sale.total_amount) {
-      return received - sale.total_amount;
-    }
-    return 0;
-  });
-
-  canFinalize = computed(() => {
-    const sale = this.currentSale();
-    const method = this.selectedMethod();
-    if (!sale || this.isProcessing()) return false;
-    if (method === 'CASH') {
-      return this.cashReceived() >= sale.total_amount;
-    }
-    return true;
-  });
-
   constructor(
     private saleService: SaleService,
     private productService: ProductService,
-    private toastService: ToastService
+    private toastService: ToastService,
   ) {}
 
   ngOnInit(): void {
-    // Restaura venda OPEN existente (se houver) ao abrir a página
     this.saleService.getCurrent().subscribe((sale) => {
-      if (sale) {
-        this.currentSale.set(sale);
-      }
+      if (sale) this.currentSale.set(sale);
     });
 
     this.productService.list().subscribe((products) => {
@@ -95,8 +65,6 @@ export class SalesComponent implements OnInit {
   }
 
   async addProductToCart(product: Product): Promise<void> {
-    console.log("Prod: ", product);
-    
     this.tappedId.set(product.id);
     setTimeout(() => this.tappedId.set(null), 200);
 
@@ -116,13 +84,9 @@ export class SalesComponent implements OnInit {
   private addItemToSale(product: Product): void {
     const sale = this.currentSale();
     if (!sale) return;
-    this.saleService
-      .addItem(sale.id, { sku: product.sku, quantity: 1 })
-      .subscribe({
-        next: (updatedSale) => {
-          this.currentSale.set(updatedSale);
-        },
-      });
+    this.saleService.addItem(sale.id, { sku: product.sku, quantity: 1 }).subscribe({
+      next: (updatedSale) => this.currentSale.set(updatedSale),
+    });
   }
 
   editQuantity(item: SaleItem): void {
@@ -144,21 +108,15 @@ export class SalesComponent implements OnInit {
         this.editingItem.set(null);
         this.toastService.success('Quantidade atualizada!');
       },
-      error: () => {
-        this.toastService.error('Erro ao atualizar quantidade.');
-      },
+      error: () => this.toastService.error('Erro ao atualizar quantidade.'),
     });
   }
 
   removeItem(item: SaleItem): void {
-    console.log("Item: ", item);
-    
     const sale = this.currentSale();
     if (!sale) return;
     this.saleService.removeItem(sale.id, item.id).subscribe({
-      next: (updatedSale) => {
-        this.currentSale.set(updatedSale);
-      } ,
+      next: (updatedSale) => this.currentSale.set(updatedSale),
     });
   }
 
@@ -170,36 +128,18 @@ export class SalesComponent implements OnInit {
     return this.products().find((p) => p.id === productId)?.unit || '';
   }
 
-  openPayment(): void {
-    this.showPayment.set(true);
-    this.selectedMethod.set(PaymentMethodEnum.PIX);
-    this.cashReceived.set(0);
+  // ─── Checkout Modal ─────────────────────────────────────────────────────────
+
+  openCheckout(): void {
+    this.showCheckoutModal.set(true);
   }
 
-  calculateChange(): void {
-    // Computed property handles this, keeping method signature for HTML template
+  onCheckoutCompleted(): void {
+    this.currentSale.set(null);
+    this.showCheckoutModal.set(false);
   }
 
-  finalizeSale(): void {
-    const sale = this.currentSale();
-    if (!sale) return;
-    this.isProcessing.set(true);
-
-    const payments: PaymentIn[] = [
-      {
-        method: this.selectedMethod(),
-        amount: sale.total_amount,
-      },
-    ];
-
-    this.saleService.finalize(sale.id, { payments }).subscribe({
-      next: () => {
-        this.toastService.success('Venda finalizada com sucesso!');
-        this.showPayment.set(false);
-        this.currentSale.set(null);
-        this.isProcessing.set(false);
-      },
-      error: () => this.isProcessing.set(false),
-    });
+  onCheckoutCancelled(): void {
+    this.showCheckoutModal.set(false);
   }
 }
