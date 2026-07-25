@@ -9,7 +9,7 @@
     }
   </div>
 
-  <app-data-table [columns]="columns" [data]="products" [loading]="isLoading" emptyMessage="Nenhum produto cadastrado">
+  <app-data-table [columns]="columns" [data]="products" [loading]="isLoading" emptyMessage="Nenhum produto cadastrado" [paginate]="true" [pageSize]="1">
 
     <!-- Nome -->
     <ng-template dtCell="info" let-row>

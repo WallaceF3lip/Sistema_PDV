@@ -10,6 +10,7 @@ import { StockComponent } from './pages/stock/stock.component';
 import { CashRegisterComponent } from './pages/cash-register/cash-register.component';
 import { UsersComponent } from './pages/users/users.component';
 import { SalesComponent } from './pages/sales/sales.component';
+import { SalesHistoryComponent } from './pages/sales-history/sales-history.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -25,6 +26,7 @@ export const routes: Routes = [
       { path: 'cash-register', component: CashRegisterComponent },
       { path: 'users', component: UsersComponent, canActivate: [adminGuard] },
       { path: 'sales', component: SalesComponent },
+      { path: 'sales-history', component: SalesHistoryComponent },
     ],
   },
   { path: '**', redirectTo: 'dashboard' },

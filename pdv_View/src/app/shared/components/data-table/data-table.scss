@@ -181,3 +181,70 @@
   font-size: 1rem;
   flex-shrink: 0;
 }
+
+// ─── Paginação ───────────────────────────────────────────────────────────────
+.dt-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5);
+  border-top: 1px solid var(--color-surface-high);
+}
+
+.dt-pagination__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-button, 6px);
+  background: transparent;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+  user-select: none;
+
+  &:hover:not([disabled]):not(.dt-pagination__btn--active) {
+    background: var(--color-surface-low);
+    border-color: var(--color-surface-high);
+  }
+
+  // Página ativa
+  &--active {
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    border-color: transparent;
+    font-weight: 700;
+    pointer-events: none;
+  }
+
+  // Setas de navegação
+  &--arrow {
+    font-size: 1.125rem;
+    font-weight: 400;
+    color: var(--color-muted);
+
+    &:hover:not([disabled]) {
+      color: var(--color-text);
+      background: var(--color-surface-low);
+      border-color: var(--color-surface-high);
+    }
+  }
+
+  // Estado desabilitado (setas)
+  &[disabled] {
+    opacity: 0.35;
+    pointer-events: none;
+    cursor: default;
+  }
+}

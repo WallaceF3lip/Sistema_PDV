@@ -1,4 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://sistema-pdvback.vercel.app',
+  apiUrl: 'http://localhost:8000',
+  // apiUrl: 'https://sistema-pdvback.vercel.app',
 };

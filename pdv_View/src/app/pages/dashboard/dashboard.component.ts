@@ -60,6 +60,12 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       route: '/products',
     },
     {
+      icon: '☰',
+      label: 'Histórico de Vendas',
+      description: 'Visualizar histórico de vendas',
+      route: '/sales-history',
+    },
+    {
       icon: '▤',
       label: 'Estoque',
       description: 'Controle de inventário',

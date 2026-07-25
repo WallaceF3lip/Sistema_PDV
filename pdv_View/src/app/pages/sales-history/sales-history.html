@@ -1,0 +1,113 @@
+<div class="sales-history">
+
+  <!-- Cabeçalho da página -->
+  <div class="sales-history__header">
+    <div>
+      <h2 class="headline-lg">Histórico de Vendas</h2>
+      <p class="body-md text-muted">Consulte e filtre as vendas realizadas</p>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="sales-history__filters card">
+    <div class="filter-group">
+      <label class="label-sm text-muted">PRODUTO</label>
+      <input
+        class="input-field"
+        type="text"
+        placeholder="Buscar por produto..."
+        [(ngModel)]="filterProduct"
+        name="filterProduct"
+      />
+    </div>
+
+    <div class="filter-group">
+      <label class="label-sm text-muted">CLIENTE</label>
+      <input
+        class="input-field"
+        type="text"
+        placeholder="Buscar por cliente..."
+        [(ngModel)]="filterClient"
+        name="filterClient"
+      />
+    </div>
+
+    <div class="filter-date-group">
+      <div class="filter-group">
+        <label class="label-sm text-muted">DE</label>
+        <input
+          class="input-field"
+          type="date"
+          [(ngModel)]="filterDateFrom"
+          name="filterDateFrom"
+        />
+      </div>
+
+      <div class="filter-group">
+        <label class="label-sm text-muted">ATÉ</label>
+        <input
+          class="input-field"
+          type="date"
+          [(ngModel)]="filterDateTo"
+          name="filterDateTo"
+        />
+      </div>
+
+      <button class="btn btn-primary filter-search-btn" (click)="loadSales()">
+        Buscar
+      </button>
+    </div>
+  </div>
+
+  <!-- Tabela -->
+  <app-data-table
+    [columns]="columns"
+    [data]="filteredSales"
+    [loading]="isLoading"
+    [paginate]="true"
+    [pageSize]="5"
+    emptyMessage="Nenhuma venda encontrada"
+  >
+
+    <!-- Cliente -->
+    <ng-template dtCell="customer_name" let-row>
+      <span class="body-md">{{ row.customer_name || '—' }}</span>
+    </ng-template>
+
+    <!-- Tipo -->
+    <ng-template dtCell="order_type" let-row>
+      <span class="body-md">{{ row.order_type || 'BALCÃO' }}</span>
+    </ng-template>
+
+    <!-- Status -->
+    <ng-template dtCell="status" let-row>
+      <span class="badge" [ngClass]="getStatusClass(row.status)">
+        {{ getStatusLabel(row.status) }}
+      </span>
+    </ng-template>
+
+    <!-- Total -->
+    <ng-template dtCell="total_amount" let-row>
+      <span class="body-md">R$ {{ row.total_amount | number:'1.2-2' }}</span>
+    </ng-template>
+
+    <!-- Abertura -->
+    <ng-template dtCell="opened_at" let-row>
+      <span class="body-md">{{ row.opened_at | date:'dd/MM/yyyy HH:mm' }}</span>
+    </ng-template>
+
+    <!-- Fechamento -->
+    <ng-template dtCell="closed_at" let-row>
+      <span class="body-md">{{ row.closed_at ? (row.closed_at | date:'dd/MM/yyyy HH:mm') : '—' }}</span>
+    </ng-template>
+
+    <!-- Ações -->
+    <ng-template dtCell="actions" let-row>
+      <div class="dt-actions">
+        <button class="btn btn-ghost" (click)="onEdit(row)">Editar</button>
+      </div>
+    </ng-template>
+
+  </app-data-table>
+
+</div>

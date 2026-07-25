@@ -33,7 +33,7 @@
             </td>
           </tr>
         } @else {
-          @for (row of _rows(); track $index) {
+          @for (row of currentPageRows(); track $index) {
             <tr class="dt-tr animate-slide-up" [style.animation-delay]="($index * 30) + 'ms'">
               @for (col of columns; track col.key) {
                 <td class="dt-td" [attr.data-align]="col.align ?? 'left'">
@@ -53,4 +53,44 @@
       </tbody>
     </table>
   </div>
+
+  @if (paginate && _rows().length > 0 && totalPages() > 1) {
+    <nav class="dt-pagination" aria-label="Navegação de páginas">
+
+      @if (showArrows()) {
+        <button
+          class="dt-pagination__btn dt-pagination__btn--arrow"
+          [disabled]="_currentPage() === 1"
+          (click)="prevPage()"
+          aria-label="Página anterior"
+        >
+          ‹
+        </button>
+      }
+
+      @for (page of visiblePages(); track page) {
+        <button
+          class="dt-pagination__btn"
+          [class.dt-pagination__btn--active]="page === _currentPage()"
+          (click)="goToPage(page)"
+          [attr.aria-current]="page === _currentPage() ? 'page' : null"
+          [attr.aria-label]="'Página ' + page"
+        >
+          {{ page }}
+        </button>
+      }
+
+      @if (showArrows()) {
+        <button
+          class="dt-pagination__btn dt-pagination__btn--arrow"
+          [disabled]="_currentPage() === totalPages()"
+          (click)="nextPage()"
+          aria-label="Próxima página"
+        >
+          ›
+        </button>
+      }
+
+    </nav>
+  }
 </div>

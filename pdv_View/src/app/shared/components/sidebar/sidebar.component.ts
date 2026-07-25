@@ -24,6 +24,7 @@ export class SidebarComponent {
   navItems: NavItem[] = [
     { icon: '▦', label: 'Dashboard', route: '/dashboard' },
     { icon: '◎', label: 'Vendas', route: '/sales' },
+    { icon: '≡', label: 'Histórico de Vendas', route: '/sales-history' },
     { icon: '☰', label: 'Produtos', route: '/products' },
     { icon: '▤', label: 'Estoque', route: '/stock' },
     { icon: '◈', label: 'Caixa', route: '/cash-register' },
