@@ -1,0 +1,4 @@
+{
+    "API_URL": "https://sistema-pdvback.vercel.app",
+    "API_URL_LOCAL": "http://localhost:3000"
+}
