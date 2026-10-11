@@ -1,7 +1,11 @@
 from app.models.user import User, RoleEnum
 from app.models.product import Product, UnitEnum
 from app.models.stock import Stock, StockMovement, MovementTypeEnum
-from app.models.sale import Sale, SaleItem, Payment, SaleStatusEnum, PaymentMethodEnum
+from app.models.sale import (
+    Sale, SaleItem, Payment, SaleStatusEnum, PaymentMethodEnum, DailyOrderCounter,
+)
+from app.models.customer import Customer, CustomerAddress
+from app.models.delivery_zone import DeliveryZone
 from app.models.cash_register import (
     CashRegister, CashMovement, CashRegisterStatusEnum, CashMovementTypeEnum,
 )
@@ -10,6 +14,8 @@ __all__ = [
     "User", "RoleEnum",
     "Product", "UnitEnum",
     "Stock", "StockMovement", "MovementTypeEnum",
-    "Sale", "SaleItem", "Payment", "SaleStatusEnum", "PaymentMethodEnum",
+    "Sale", "SaleItem", "Payment", "SaleStatusEnum", "PaymentMethodEnum", "DailyOrderCounter",
+    "Customer", "CustomerAddress",
+    "DeliveryZone",
     "CashRegister", "CashMovement", "CashRegisterStatusEnum", "CashMovementTypeEnum",
 ]

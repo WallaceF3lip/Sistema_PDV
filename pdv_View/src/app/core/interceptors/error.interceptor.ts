@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { ToastService } from '../services/toast.service';
 import { AuthService } from '../services/auth.service';
+import { SILENT_ERROR } from './silent-error.token';
 
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const toast = inject(ToastService);
@@ -37,7 +38,10 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         message = 'Erro interno do servidor';
       }
 
-      toast.error(message);
+      // Requisições silenciosas (polling, erro tratado inline) não exibem toast
+      if (!req.context.get(SILENT_ERROR)) {
+        toast.error(message);
+      }
       return throwError(() => error);
     })
   );

@@ -1,0 +1,219 @@
+<div class="orders">
+
+  <!-- Cabeçalho -->
+  <div class="orders__header">
+    <div class="orders__title">
+      <h2 class="headline-lg">Pedidos do Dia</h2>
+      <p class="body-md text-muted">
+        @if (isToday()) {
+          Atualização automática a cada 15 s
+        } @else {
+          Consulta de outra data — atualização automática desativada
+        }
+      </p>
+    </div>
+
+    <div class="orders__toolbar">
+      <input class="input-field orders__date" type="date" aria-label="Dia de operação"
+        [ngModel]="displayDate()" (ngModelChange)="onDateChange($event)" />
+      @if (!isToday()) {
+      <button class="btn btn-ghost" type="button" (click)="backToToday()">Hoje</button>
+      }
+      <button class="btn btn-secondary" type="button" [disabled]="isLoading()" (click)="refresh()">
+        {{ isLoading() ? 'Atualizando...' : '↻ Atualizar' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="orders__status-line body-sm">
+    @if (lastUpdated()) {
+    <span class="text-muted">Atualizado às {{ lastUpdated() }}</span>
+    }
+    @if (refreshError()) {
+    <span class="orders__refresh-error" role="status">⚠ Falha ao atualizar às {{ refreshError() }}</span>
+    }
+  </div>
+
+  <!-- Filtros -->
+  <div class="orders__filters">
+    <div class="orders__chips" role="group" aria-label="Filtrar por tipo">
+      @for (chip of typeChips; track chip.value) {
+      <button type="button" class="chip" [class.chip--active]="typeFilter() === chip.value"
+        (click)="typeFilter.set(chip.value)">
+        {{ chip.label }}
+        <span class="chip__count">{{ typeCounts()[chip.value] }}</span>
+      </button>
+      }
+    </div>
+    <input class="input-field orders__search" type="search" placeholder="Buscar por número, cliente ou telefone..."
+      aria-label="Buscar pedidos" [ngModel]="search()" (ngModelChange)="search.set($event)" />
+  </div>
+
+  <!-- Abas (telas estreitas) -->
+  <div class="orders__tabs" role="tablist">
+    @for (group of groups; track group.value) {
+    <button type="button" role="tab" class="orders__tab" [class.orders__tab--active]="mobileTab() === group.value"
+      [attr.aria-selected]="mobileTab() === group.value" (click)="mobileTab.set(group.value)">
+      {{ group.label }} <span class="chip__count">{{ groupCount(group.value) }}</span>
+    </button>
+    }
+  </div>
+
+  <!-- Colunas por status -->
+  <div class="orders__board" [class.orders__board--canceled-collapsed]="!showCanceled()">
+    @for (group of groups; track group.value) {
+    <section class="orders-col" [class.orders-col--active]="mobileTab() === group.value"
+      [class.orders-col--collapsed]="group.value === 'CANCELED' && !showCanceled()"
+      [ngClass]="'orders-col--' + group.value.toLowerCase()"
+      [attr.aria-label]="group.label">
+      <header class="orders-col__header">
+        <h3 class="orders-col__title">
+          {{ group.label }} <span class="chip__count">{{ groupCount(group.value) }}</span>
+        </h3>
+        @if (group.value === 'CANCELED') {
+        <button type="button" class="btn btn-ghost orders-col__toggle" (click)="showCanceled.set(!showCanceled())">
+          {{ showCanceled() ? 'Recolher' : 'Mostrar' }}
+        </button>
+        }
+      </header>
+
+      <div class="orders-col__list">
+        @for (sale of groupOrders()[group.value]; track sale.id) {
+        <article class="order-card card" [class.order-card--late]="isLate(sale)"
+          [class.order-card--canceled]="sale.status === SaleStatusEnum.CANCELED">
+          <div class="order-card__top">
+            <span class="order-card__label">{{ saleLabel(sale) }}</span>
+            <span class="type-badge" [ngClass]="typeClass(sale)">{{ typeLabel(sale) }}</span>
+            @if (isLate(sale)) {
+            <span class="late-badge">Atrasado</span>
+            }
+            <span class="order-card__total">R$ {{ num(sale.total_amount) | number:'1.2-2' }}</span>
+          </div>
+
+          @if (sale.customer_name || sale.customer_phone) {
+          <div class="order-card__customer">
+            @if (sale.customer_name) { <strong>{{ sale.customer_name }}</strong> }
+            @if (sale.customer_phone) { <span class="text-muted">{{ formatPhone(sale.customer_phone) }}</span> }
+          </div>
+          }
+
+          @if (sale.delivery_time) {
+          <div class="order-card__row">
+            <span class="text-muted">{{ isDelivery(sale) ? 'Entrega' : 'Retirada' }}:</span> {{ sale.delivery_time }}
+          </div>
+          }
+
+          @if (isDelivery(sale)) {
+          @if (sale.delivery_address) {
+          <div class="order-card__row order-card__address">📍 {{ sale.delivery_address }}</div>
+          }
+          <div class="order-card__row">
+            <span class="text-muted">Zona:</span> {{ sale.delivery_zone_name || '—' }}
+            · <span class="text-muted">Taxa:</span> R$ {{ num(sale.delivery_fee) | number:'1.2-2' }}
+          </div>
+          }
+
+          <div class="order-card__row">
+            @if (sale.status === SaleStatusEnum.PENDING) {
+            <span class="text-muted">Pagamento previsto:</span> {{ methodLabel(sale.delivery_payment_method) }}
+            } @else if (sale.payments.length) {
+            <span class="text-muted">Pago:</span> {{ paidMethods(sale) }}
+            }
+          </div>
+
+          @if (sale.items.length) {
+          <ul class="order-card__items">
+            @for (item of sale.items; track item.id) {
+            <li>{{ itemLine(item) }}</li>
+            }
+          </ul>
+          }
+
+          @if (sale.notes) {
+          <div class="order-card__notes">📝 {{ sale.notes }}</div>
+          }
+
+          @if (sale.status !== SaleStatusEnum.CANCELED) {
+          <div class="order-card__actions">
+            @if (sale.status === SaleStatusEnum.PENDING) {
+            <button type="button" class="btn btn-primary" (click)="openSettle(sale)">Receber</button>
+            }
+            @if (printService.canPrint() && (sale.status === SaleStatusEnum.PENDING || sale.status === SaleStatusEnum.PAID)) {
+            <button type="button" class="btn btn-secondary" (click)="reprint(sale)">Reimprimir</button>
+            }
+            <button type="button" class="btn btn-ghost" (click)="openCancel(sale)">Cancelar</button>
+          </div>
+          }
+        </article>
+        } @empty {
+        <p class="orders-col__empty text-muted body-sm">Nenhum pedido</p>
+        }
+      </div>
+    </section>
+    }
+  </div>
+</div>
+
+<!-- Modal Receber -->
+@if (settleTarget(); as sale) {
+<div class="glass-overlay" (click)="closeSettle()">
+  <div class="modal-card card animate-scale-in orders-modal" (click)="$event.stopPropagation()" role="dialog"
+    aria-modal="true">
+    <h3 class="headline-md">Receber {{ saleLabel(sale) }}</h3>
+    @if (sale.customer_name) {
+    <p class="body-md text-muted">{{ sale.customer_name }}</p>
+    }
+    <div class="orders-modal__total">
+      <span class="label-sm text-muted">TOTAL A RECEBER</span>
+      <span class="orders-modal__amount">R$ {{ num(sale.total_amount) | number:'1.2-2' }}</span>
+    </div>
+
+    <app-payment-entry [total]="num(sale.total_amount)" [initialMethod]="sale.delivery_payment_method ?? null"
+      (stateChange)="settleState.set($event)" />
+
+    @if (settleError()) {
+    <div class="orders-modal__error animate-fade-in" role="alert">⚠️ {{ settleError() }}</div>
+    }
+
+    <div class="orders-modal__footer">
+      <button type="button" class="btn btn-ghost" [disabled]="isSettling()" (click)="closeSettle()">Voltar</button>
+      <button type="button" class="btn btn-primary" [disabled]="!settleState()?.valid || isSettling()"
+        (click)="confirmSettle()">
+        {{ isSettling() ? 'Processando...' : 'Confirmar recebimento' }}
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Modal Cancelar -->
+@if (cancelTarget(); as sale) {
+<div class="glass-overlay" (click)="closeCancel()">
+  <div class="modal-card card animate-scale-in orders-modal" (click)="$event.stopPropagation()" role="dialog"
+    aria-modal="true">
+    <h3 class="headline-md">Cancelar {{ saleLabel(sale) }}?</h3>
+    <p class="body-md">
+      Total: <strong>R$ {{ num(sale.total_amount) | number:'1.2-2' }}</strong>
+      @if (sale.customer_name) { · {{ sale.customer_name }} }
+    </p>
+    @if (sale.status === SaleStatusEnum.PAID) {
+    <p class="orders-modal__warning">
+      Este pedido já foi pago: o valor será estornado do caixa aberto e o estoque devolvido.
+    </p>
+    } @else {
+    <p class="body-sm text-muted">O estoque dos itens será devolvido.</p>
+    }
+
+    @if (cancelError()) {
+    <div class="orders-modal__error animate-fade-in" role="alert">⚠️ {{ cancelError() }}</div>
+    }
+
+    <div class="orders-modal__footer">
+      <button type="button" class="btn btn-ghost" [disabled]="isCanceling()" (click)="closeCancel()">Voltar</button>
+      <button type="button" class="btn btn-primary" [disabled]="isCanceling()" (click)="confirmCancel()">
+        {{ isCanceling() ? 'Cancelando...' : 'Confirmar cancelamento' }}
+      </button>
+    </div>
+  </div>
+</div>
+}

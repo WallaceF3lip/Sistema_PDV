@@ -4,11 +4,15 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 import datetime as dt
 
+from app.core.business_day import current_business_date
 from app.core.database import get_db
 from app.core.security import get_current_user
-from app.models.sale import Sale
-from app.schemas.schemas import AddItemRequest, FinalizeSaleRequest, SaleOut, UpdateOrderDetailsRequest
-from app.services.sale_service import SaleService
+from app.models.sale import Sale, SaleStatusEnum
+from app.schemas.schemas import (
+    AddItemRequest, FinalizeSaleRequest, OrderTypeFilterEnum, SaleOut, SalesBoardOut,
+    SettleSaleRequest, UpdateOrderDetailsRequest,
+)
+from app.services.sale_service import SaleService, order_type_filter_clause, sale_eager_options
 
 router = APIRouter(prefix="/sales", tags=["sales"])
 
@@ -25,6 +29,19 @@ def open_sale(db: Session = Depends(get_db), current_user=Depends(get_current_us
     """Abre uma nova venda (ou reaproveita OPEN existente)."""
     return SaleService.open_sale(db, user_id=current_user.id)
 
+# GET - Quadro de pedidos do dia (declarado ANTES de /{sale_id})
+@router.get("/board", response_model=SalesBoardOut)
+def get_sales_board(
+    date: dt.date | None = None,
+    db: Session = Depends(get_db),
+    _=Depends(get_current_user),
+):
+    """
+    Pedidos finalizados (PENDING/PAID/CANCELED) do dia de operação `date`
+    (padrão: dia de operação atual), com contagens por status e por tipo.
+    """
+    return SaleService.get_board(db, date or current_business_date())
+
 # GET - Consultar venda por ID
 @router.get("/{sale_id}", response_model=SaleOut)
 def get_sale(sale_id: int, db: Session = Depends(get_db), _=Depends(get_current_user)):
@@ -38,13 +55,24 @@ def get_sale(sale_id: int, db: Session = Depends(get_db), _=Depends(get_current_
 def get_sales(
     start_date: dt.date,
     end_date: dt.date,
+    status: SaleStatusEnum | None = None,
+    order_type: OrderTypeFilterEnum | None = None,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    """Retorna lista de vendas no intervalo de datas (inclusive)."""
-    sales = db.query(Sale).filter(
-        func.date(Sale.opened_at).between(start_date, end_date)
+    """
+    Retorna lista de vendas no intervalo de datas (inclusive).
+    Filtros opcionais: `status` e `order_type` (COUNTER = Balcão, sem tipo).
+    """
+    sales = (
+        db.query(Sale)
+        .options(*sale_eager_options())
+        .filter(func.date(Sale.opened_at).between(start_date, end_date))
     )
+    if status is not None:
+        sales = sales.filter(Sale.status == status)
+    if order_type is not None:
+        sales = sales.filter(order_type_filter_clause(order_type))
     return sales.all()
 
 # POST - Adicionar itens a venda
@@ -110,6 +138,26 @@ def finalize_sale(
         user_id=current_user.id,
     )
 
+# POST - Quitar pedido PENDING (recebimento na entrega/retirada)
+@router.post("/{sale_id}/settle", response_model=SaleOut)
+def settle_sale(
+    sale_id: int,
+    payload: SettleSaleRequest,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """
+    Quita um pedido PENDING → PAID: soma dos pagamentos == total_amount,
+    exige caixa aberto (409) e registra movimentos SALE no caixa.
+    """
+    payments = [p.model_dump() for p in payload.payments]
+    return SaleService.settle_sale(
+        db=db,
+        sale_id=sale_id,
+        payments=payments,
+        user_id=current_user.id,
+    )
+
 # PATCH - Salvar detalhes do pedido sem finalizar
 @router.patch("/{sale_id}/order-details", response_model=SaleOut)
 def update_order_details(
@@ -119,10 +167,19 @@ def update_order_details(
     _=Depends(get_current_user),
 ):
     """Salva cliente, observação, tipo de pedido e dados de entrega sem finalizar a venda."""
+    data = payload.model_dump(exclude_none=True)
+    # customer_id: null explícito desvincula; omitido mantém o vínculo atual
+    if "customer_id" in payload.model_fields_set:
+        data["customer_id"] = payload.customer_id
+    # order_type / delivery_zone_id: null explícito é aplicado
+    # (voltar para Balcão limpa o tipo; Entrega sem zona = taxa manual)
+    for field in ("order_type", "delivery_zone_id"):
+        if field in payload.model_fields_set:
+            data[field] = getattr(payload, field)
     return SaleService.update_order_details(
         db=db,
         sale_id=sale_id,
-        data=payload.model_dump(exclude_none=True),
+        data=data,
     )
 
 # POST - Cancelar venda que ja foi fechada

@@ -1,8 +1,26 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Sale, AddItemRequest, FinalizeSaleRequest, UpdateOrderDetailsRequest } from '../models';
+import {
+  Sale,
+  AddItemRequest,
+  FinalizeSaleRequest,
+  UpdateOrderDetailsRequest,
+  SettleSaleRequest,
+  SalesBoard,
+  SaleListFilters,
+} from '../models';
+import { SILENT_ERROR } from '../interceptors/silent-error.token';
+
+/** Opções de requisição: silent = sem toast do interceptor */
+export interface SaleRequestOptions {
+  silent?: boolean;
+}
+
+function requestContext(opts?: SaleRequestOptions): HttpContext {
+  return new HttpContext().set(SILENT_ERROR, !!opts?.silent);
+}
 
 @Injectable({ providedIn: 'root' })
 export class SaleService {
@@ -22,9 +40,27 @@ export class SaleService {
     return this.http.get<Sale>(`${this.apiUrl}/${id}`);
   }
 
-  list(startDate: string, endDate: string): Observable<Sale[]> {
-    return this.http.get<Sale[]>(this.apiUrl, {
-      params: { start_date: startDate, end_date: endDate },
+  list(startDate: string, endDate: string, filters?: SaleListFilters): Observable<Sale[]> {
+    let params = new HttpParams().set('start_date', startDate).set('end_date', endDate);
+    if (filters?.status) params = params.set('status', filters.status);
+    if (filters?.order_type) params = params.set('order_type', filters.order_type);
+    return this.http.get<Sale[]>(this.apiUrl, { params });
+  }
+
+  /** Quadro do dia de operação (`date` YYYY-MM-DD; padrão: dia atual no servidor) */
+  getBoard(date?: string, opts?: SaleRequestOptions): Observable<SalesBoard> {
+    let params = new HttpParams();
+    if (date) params = params.set('date', date);
+    return this.http.get<SalesBoard>(`${this.apiUrl}/board`, {
+      params,
+      context: requestContext(opts),
+    });
+  }
+
+  /** Quita um pedido PENDING (POST /sales/{id}/settle) */
+  settle(saleId: number, request: SettleSaleRequest, opts?: SaleRequestOptions): Observable<Sale> {
+    return this.http.post<Sale>(`${this.apiUrl}/${saleId}/settle`, request, {
+      context: requestContext(opts),
     });
   }
 
@@ -48,7 +84,9 @@ export class SaleService {
     return this.http.patch<Sale>(`${this.apiUrl}/${saleId}/order-details`, payload);
   }
 
-  cancel(saleId: number): Observable<Sale> {
-    return this.http.post<Sale>(`${this.apiUrl}/${saleId}/cancel`, {});
+  cancel(saleId: number, opts?: SaleRequestOptions): Observable<Sale> {
+    return this.http.post<Sale>(`${this.apiUrl}/${saleId}/cancel`, {}, {
+      context: requestContext(opts),
+    });
   }
 }
