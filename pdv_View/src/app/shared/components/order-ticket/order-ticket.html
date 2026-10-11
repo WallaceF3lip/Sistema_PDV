@@ -1,0 +1,113 @@
+<div class="ticket">
+  <!-- 1. Cabeçalho -->
+  <header class="ticket__header">
+    <div class="ticket__store">{{ establishmentName }}</div>
+    @if (establishmentPhone) {
+    <div>{{ establishmentPhone }}</div>
+    }
+    @if (copyLabel()) {
+    <div class="ticket__copy">{{ copyLabel() }}</div>
+    }
+  </header>
+
+  <!-- 2. Identificação -->
+  <section class="ticket__block ticket__id">
+    <div class="ticket__order">{{ label() }}</div>
+    @if (dateTime()) {
+    <div>{{ dateTime() }}</div>
+    }
+    <div class="ticket__type">{{ typeLabel() }}</div>
+  </section>
+
+  <!-- 3. Cliente / entrega -->
+  @if (sale().customer_name || sale().customer_phone || sale().delivery_address || (timeLabel() && sale().delivery_time)) {
+  <section class="ticket__block">
+    @if (sale().customer_name) {
+    <div class="ticket__text"><b>Cliente:</b> {{ sale().customer_name }}</div>
+    }
+    @if (sale().customer_phone) {
+    <div class="ticket__text"><b>Tel:</b> {{ sale().customer_phone }}</div>
+    }
+    @if (sale().delivery_address) {
+    <div class="ticket__text"><b>End:</b> {{ sale().delivery_address }}</div>
+    @if (sale().delivery_zone_name) {
+    <div class="ticket__text"><b>Zona:</b> {{ sale().delivery_zone_name }}</div>
+    }
+    }
+    @if (timeLabel() && sale().delivery_time) {
+    <div class="ticket__strong">{{ timeLabel() }} {{ sale().delivery_time }}</div>
+    }
+  </section>
+  }
+
+  <!-- 4. Itens -->
+  <section class="ticket__block">
+    @for (item of sale().items; track item.id) {
+    <div class="ticket__item">
+      <div class="ticket__text">{{ qty(item.quantity) }} x {{ itemName(item) }}</div>
+      <div class="ticket__row ticket__row--sub">
+        <span class="ticket__value">{{ money(item.unit_price) }}</span>
+        <span class="ticket__value">{{ money(item.subtotal) }}</span>
+      </div>
+    </div>
+    }
+  </section>
+
+  <!-- 5. Totais -->
+  <section class="ticket__block">
+    <div class="ticket__row">
+      <span>Subtotal itens</span><span class="ticket__value">{{ money(itemsTotal()) }}</span>
+    </div>
+    @if (deliveryFee() > 0) {
+    <div class="ticket__row">
+      <span>Taxa de entrega</span><span class="ticket__value">{{ money(deliveryFee()) }}</span>
+    </div>
+    }
+    <div class="ticket__row ticket__total">
+      <span>TOTAL</span><span class="ticket__value">{{ money(total()) }}</span>
+    </div>
+  </section>
+
+  <!-- 6. Pagamento -->
+  @if (isPaid()) {
+  <section class="ticket__block">
+    @for (p of sale().payments; track p.id) {
+    <div class="ticket__row">
+      <span>{{ methodLabel(p.method) }}</span><span class="ticket__value">{{ money(p.amount) }}</span>
+    </div>
+    }
+    @if (showChange()) {
+    <div class="ticket__row">
+      <span>Recebido</span><span class="ticket__value">{{ money(extras()?.cashReceived) }}</span>
+    </div>
+    <div class="ticket__row">
+      <span>Troco</span><span class="ticket__value">{{ money(extras()?.change) }}</span>
+    </div>
+    }
+  </section>
+  } @else if (isPending()) {
+  <section class="ticket__block">
+    <div class="ticket__row ticket__due">
+      <span>{{ pendingMethod() ? 'A RECEBER: ' + pendingMethod() : 'A RECEBER' }}</span>
+      <span class="ticket__value">{{ money(total()) }}</span>
+    </div>
+  </section>
+  }
+
+  <!-- 7. Observações -->
+  @if (sale().notes) {
+  <section class="ticket__block">
+    <div class="ticket__notes">
+      <div>OBS:</div>
+      <div class="ticket__notes-text">{{ sale().notes }}</div>
+    </div>
+  </section>
+  }
+
+  <!-- 8. Rodapé -->
+  <footer class="ticket__block ticket__footer">
+    <div>{{ footerMessage }}</div>
+    <div>Impresso em {{ printedAt }}</div>
+    <div>Não é documento fiscal</div>
+  </footer>
+</div>

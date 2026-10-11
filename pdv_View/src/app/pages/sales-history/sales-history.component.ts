@@ -1,8 +1,10 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SaleService } from '../../core/services/sale.service';
+import { PrintService } from '../../core/services/print.service';
 import { Sale, SaleStatusEnum } from '../../core/models';
+import { saleLabel } from '../../core/utils/sale-label';
 import {
   DataTableComponent,
   DtCellDirective,
@@ -21,43 +23,44 @@ export class SalesHistoryComponent implements OnInit {
   sales = signal<Sale[]>([]);
   isLoading = signal<boolean>(false);
 
+  readonly saleLabel = saleLabel;
+  private readonly printService = inject(PrintService);
+
   // ─── Filtros ───────────────────────────────────────────────────────────────
-  filterProduct = '';
-  filterClient = '';
+  // Signals: o computed filteredSales reage à digitação
+  filterProduct = signal('');
+  filterClient = signal('');
   filterDateFrom = '';
   filterDateTo = '';
 
   // ─── Colunas da tabela ─────────────────────────────────────────────────────
   columns: TableColumn[] = [
-    { key: 'id', label: '#', width: '60px', align: 'center' },
+    { key: 'id', label: '#', width: '120px', align: 'center' },
     { key: 'customer_name', label: 'Cliente' },
     {key: 'order_type', label: 'Tipo', width: '120px', align: 'center' },
     { key: 'status', label: 'Status', width: '120px', align: 'center' },
     { key: 'total_amount', label: 'Total', width: '140px', align: 'right' },
     { key: 'opened_at', label: 'Abertura', width: '155px' },
     { key: 'closed_at', label: 'Fechamento', width: '155px' },
-    { key: 'actions', label: '', width: '90px', align: 'center' },
+    { key: 'actions', label: '', width: '120px', align: 'center' },
   ];
 
   // ─── Computed: filtros client-side ─────────────────────────────────────────
   /**
    * Aplica os filtros de produto e cliente sobre as vendas carregadas.
-   *
-   * Filtro de produto: o modelo SaleItem não expõe o nome do produto,
-   * apenas o product_id. A busca é feita convertendo product_id para string
-   * e comparando com o texto digitado. Quando o backend retornar o nome,
-   * este computed pode ser atualizado sem mudança estrutural.
+   * Filtro de produto: nome do produto do item (`product_name`), sem
+   * diferenciar maiúsculas/minúsculas.
    */
   filteredSales = computed(() => {
     const all = this.sales();
-    const productQuery = this.filterProduct.trim().toLowerCase();
-    const clientQuery = this.filterClient.trim().toLowerCase();
+    const productQuery = this.filterProduct().trim().toLowerCase();
+    const clientQuery = this.filterClient().trim().toLowerCase();
 
     return all.filter((sale) => {
-      // Filtro por produto (via product_id como fallback)
+      // Filtro por nome do produto
       if (productQuery) {
         const hasProduct = sale.items.some((item) =>
-          String(item.product_id).includes(productQuery)
+          (item.product_name ?? '').toLowerCase().includes(productQuery)
         );
         if (!hasProduct) return false;
       }
@@ -120,9 +123,17 @@ export class SalesHistoryComponent implements OnInit {
     return classes[status] ?? 'badge--muted';
   }
 
-  // ─── Ações (placeholder) ───────────────────────────────────────────────────
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  onEdit(_sale: Sale): void {
-    // Placeholder — implementação futura
+  // ─── Ações ─────────────────────────────────────────────────────────────────
+  /** Reimpressão só para vendas PENDING/PAID e com impressão disponível */
+  canReprint(sale: Sale): boolean {
+    return (
+      this.printService.canPrint() &&
+      (sale.status === SaleStatusEnum.PENDING || sale.status === SaleStatusEnum.PAID)
+    );
+  }
+
+  /** Reimprime a comanda (1 via "REIMPRESSÃO") com os dados carregados */
+  reprint(sale: Sale): void {
+    this.printService.printOrderTicket(sale, { reprint: true });
   }
 }

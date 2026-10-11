@@ -594,3 +594,40 @@ img {
   white-space: nowrap;
   border-width: 0;
 }
+
+// ─── Impressão da comanda (order-ticket-printing) ────────────────────────────
+// A área de impressão (app-print-root) fica oculta na tela. Durante a impressão
+// de uma comanda o PrintService adiciona body.is-printing-ticket: só a comanda
+// é impressa. Fora disso, Ctrl+P imprime a tela normalmente.
+.print-root {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: 58mm auto;
+    margin: 0;
+  }
+
+  body.is-printing-ticket {
+    width: 58mm;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+
+    app-root > :not(app-print-root) {
+      display: none !important;
+    }
+
+    .print-root {
+      display: block;
+    }
+  }
+
+  html:has(body.is-printing-ticket) {
+    width: 58mm;
+    min-height: 0 !important;
+    background: #fff !important;
+  }
+}

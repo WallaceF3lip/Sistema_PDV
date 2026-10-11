@@ -16,7 +16,8 @@
         class="input-field"
         type="text"
         placeholder="Buscar por produto..."
-        [(ngModel)]="filterProduct"
+        [ngModel]="filterProduct()"
+        (ngModelChange)="filterProduct.set($event)"
         name="filterProduct"
       />
     </div>
@@ -27,7 +28,8 @@
         class="input-field"
         type="text"
         placeholder="Buscar por cliente..."
-        [(ngModel)]="filterClient"
+        [ngModel]="filterClient()"
+        (ngModelChange)="filterClient.set($event)"
         name="filterClient"
       />
     </div>
@@ -69,6 +71,11 @@
     emptyMessage="Nenhuma venda encontrada"
   >
 
+    <!-- Número do pedido -->
+    <ng-template dtCell="id" let-row>
+      <span class="body-md">{{ saleLabel(row) }}</span>
+    </ng-template>
+
     <!-- Cliente -->
     <ng-template dtCell="customer_name" let-row>
       <span class="body-md">{{ row.customer_name || '—' }}</span>
@@ -104,7 +111,9 @@
     <!-- Ações -->
     <ng-template dtCell="actions" let-row>
       <div class="dt-actions">
-        <button class="btn btn-ghost" (click)="onEdit(row)">Editar</button>
+        @if (canReprint(row)) {
+        <button class="btn btn-ghost" (click)="reprint(row)">🖨 Reimprimir</button>
+        }
       </div>
     </ng-template>
 

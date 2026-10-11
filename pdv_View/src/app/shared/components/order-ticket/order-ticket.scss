@@ -1,0 +1,116 @@
+// Comanda para bobina térmica de 58 mm: área útil de 48 mm, somente preto e branco.
+:host {
+  display: block;
+  // Uma via por página: o driver térmico corta entre páginas
+  break-after: page;
+  page-break-after: always;
+}
+
+:host(:last-child) {
+  break-after: auto;
+  page-break-after: auto;
+}
+
+.ticket {
+  width: 48mm;
+  margin: 0 auto;
+  padding: 3mm 0 6mm;
+  // Fonte sem serifa em negrito: Courier New fica fina demais na impressão térmica
+  font: bold 11px/1.2 Arial, Helvetica, sans-serif;
+  font-weight: 100;
+  color: #000;
+  -webkit-font-smoothing: none;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+  background: #fff;
+
+  &__header {
+    text-align: center;
+  }
+
+  &__store {
+    font-size: 17px;
+    font-weight: bold;
+    overflow-wrap: anywhere;
+  }
+
+  &__copy {
+    display: inline-block;
+    margin-top: 1mm;
+    padding: 0 2mm;
+    border: 1px solid #000;
+    font-weight: bold;
+  }
+
+  &__block {
+    border-top: 1px dashed #000;
+    margin-top: 1.5mm;
+    padding-top: 1.5mm;
+  }
+
+  &__id {
+    text-align: center;
+  }
+
+  &__order {
+    font-size: 24px;
+    font-weight: bold;
+  }
+
+  &__type,
+  &__strong {
+    font-weight: bold;
+  }
+
+  &__text {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  &__item + &__item {
+    margin-top: 0.8mm;
+  }
+
+  &__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1.5mm;
+
+    > span:first-child {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    &--sub {
+      padding-left: 3mm;
+    }
+  }
+
+  &__value {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  &__total,
+  &__due {
+    font-size: 18px;
+    font-weight: bold;
+  }
+
+  &__notes-text {
+    white-space: pre-wrap;
+  }
+
+  &__notes {
+    overflow-wrap: anywhere;
+    border: 1px solid #000;
+    padding: 1mm;
+    font-weight: bold;
+  }
+
+  &__footer {
+    text-align: center;
+    font-size: 13px;
+  }
+}
