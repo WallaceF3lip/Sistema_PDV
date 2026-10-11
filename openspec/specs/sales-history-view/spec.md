@@ -1,3 +1,10 @@
+# sales-history-view Specification
+
+## Purpose
+Tela de histórico de vendas (/sales-history) com filtros por período, produto e cliente, tabela paginada e status por cor.
+
+## Requirements
+
 ### Requirement: Tela de histórico de vendas acessível via rota
 O sistema SHALL disponibilizar uma rota `/sales-history` dentro do layout principal, protegida pelo `authGuard`, que renderiza o componente `SalesHistoryComponent`.
 
@@ -118,13 +125,13 @@ O sistema SHALL exibir o status de cada venda como um badge com cor diferenciada
 
 ---
 
-### Requirement: Botão de edição por linha (placeholder)
-O sistema SHALL exibir um botão "Editar" em cada linha da tabela. Por enquanto o botão não executa nenhuma ação.
+### Requirement: Reimprimir comanda pelo histórico
+A coluna de ações de cada linha SHALL exibir o botão "Reimprimir" para vendas com status `PENDING` ou `PAID`, quando a impressão de comanda estiver disponível. O clique SHALL imprimir a comanda da venda (uma via, marcada "REIMPRESSÃO") com os dados carregados no histórico. Vendas `OPEN` ou `CANCELED` SHALL NOT exibir o botão.
 
-#### Scenario: Botão visível em cada linha
-- **WHEN** a tabela exibe uma ou mais vendas
-- **THEN** cada linha possui um botão "Editar" na coluna de ações
+#### Scenario: Reimprimir venda paga
+- **WHEN** o usuário clica em "Reimprimir" na linha de uma venda `PAID`
+- **THEN** abre o diálogo de impressão com a comanda dessa venda
 
-#### Scenario: Clique no botão sem efeito
-- **WHEN** o usuário clica no botão "Editar" de uma venda
-- **THEN** nenhuma ação é executada (placeholder para futura implementação)
+#### Scenario: Venda cancelada sem ação
+- **WHEN** a tabela exibe uma venda `CANCELED`
+- **THEN** a linha não exibe o botão "Reimprimir"

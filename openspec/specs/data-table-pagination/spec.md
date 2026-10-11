@@ -1,3 +1,10 @@
+# data-table-pagination Specification
+
+## Purpose
+Paginação client-side opcional no componente compartilhado app-data-table.
+
+## Requirements
+
 ### Requirement: Paginação habilitável via input
 O componente `app-data-table` SHALL aceitar um input booleano `paginate` (padrão `false`). Quando `paginate` for `false`, o comportamento atual de renderizar todos os itens é mantido sem alteração.
 
