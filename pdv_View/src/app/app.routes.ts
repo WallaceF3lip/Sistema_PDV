@@ -11,6 +11,10 @@ import { CashRegisterComponent } from './pages/cash-register/cash-register.compo
 import { UsersComponent } from './pages/users/users.component';
 import { SalesComponent } from './pages/sales/sales.component';
 import { SalesHistoryComponent } from './pages/sales-history/sales-history.component';
+import { CustomersComponent } from './pages/customers/customers.component';
+import { DeliveryZonesComponent } from './pages/delivery-zones/delivery-zones.component';
+import { OrdersComponent } from './pages/orders/orders.component';
+import { ReportsComponent } from './pages/reports/reports.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -26,7 +30,11 @@ export const routes: Routes = [
       { path: 'cash-register', component: CashRegisterComponent },
       { path: 'users', component: UsersComponent, canActivate: [adminGuard] },
       { path: 'sales', component: SalesComponent },
+      { path: 'orders', component: OrdersComponent },
       { path: 'sales-history', component: SalesHistoryComponent },
+      { path: 'customers', component: CustomersComponent },
+      { path: 'delivery-zones', component: DeliveryZonesComponent, canActivate: [adminGuard] },
+      { path: 'reports', component: ReportsComponent, canActivate: [adminGuard] },
     ],
   },
   { path: '**', redirectTo: 'dashboard' },

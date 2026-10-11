@@ -1,8 +1,11 @@
-from datetime import datetime
+import enum
+from datetime import date, datetime
 from decimal import Decimal
-from typing import Optional
+from typing import Annotated, Optional
 
-from pydantic import BaseModel, EmailStr, Field, model_validator
+import re
+
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
 from app.models.user import RoleEnum
 from app.models.product import UnitEnum
@@ -110,6 +113,50 @@ class StockMovementOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+# ─── Delivery Zones ──────────────────────────────────────────────────────────
+
+# Taxa de entrega: >= 0, máx. 9999.99, 2 casas decimais
+FeeDecimal = Annotated[Decimal, Field(ge=0, le=Decimal("9999.99"), decimal_places=2)]
+
+class DeliveryZoneCreate(BaseModel):
+    name: str = Field(min_length=2, max_length=100)
+    fee: FeeDecimal
+
+    @field_validator("name", mode="before")
+    @classmethod
+    def strip_name(cls, v):
+        return v.strip() if isinstance(v, str) else v
+
+
+class DeliveryZoneUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=2, max_length=100)
+    fee: Optional[FeeDecimal] = None
+    is_active: Optional[bool] = None
+
+    @field_validator("name", mode="before")
+    @classmethod
+    def strip_name(cls, v):
+        return v.strip() if isinstance(v, str) else v
+
+
+class DeliveryZoneOut(BaseModel):
+    id: int
+    name: str
+    fee: Decimal
+    is_active: bool
+
+    model_config = {"from_attributes": True}
+
+
+class DeliveryZoneBrief(BaseModel):
+    id: int
+    name: str
+    fee: Decimal
+    is_active: bool
+
+    model_config = {"from_attributes": True}
+
+
 # ─── Sales ───────────────────────────────────────────────────────────────────
 
 class AddItemRequest(BaseModel):
@@ -129,6 +176,11 @@ class FinalizeSaleRequest(BaseModel):
     payments: list[PaymentIn] = []
 
 
+class SettleSaleRequest(BaseModel):
+    """Quitação de pedido PENDING: 1 a 3 pagamentos, soma == total_amount."""
+    payments: list[PaymentIn] = Field(min_length=1, max_length=3)
+
+
 class UpdateOrderDetailsRequest(BaseModel):
     customer_name: Optional[str] = Field(None, max_length=255)
     notes: Optional[str] = Field(None, max_length=500)
@@ -139,6 +191,11 @@ class UpdateOrderDetailsRequest(BaseModel):
     customer_phone: Optional[str] = Field(None, max_length=30)
     delivery_payment_method: Optional[PaymentMethodEnum] = None
     is_paid: Optional[bool] = None
+    # Vínculo opcional com cliente; null explícito desvincula
+    customer_id: Optional[int] = None
+    # Taxa de entrega (somente DELIVERY; Balcão/Retirada são zerados no backend)
+    delivery_zone_id: Optional[int] = None
+    delivery_fee: Optional[FeeDecimal] = None
 
     @model_validator(mode="after")
     def validate_delivery_fields(self):
@@ -160,6 +217,8 @@ class UpdateOrderDetailsRequest(BaseModel):
 class SaleItemOut(BaseModel):
     id: int
     product_id: int
+    # Nome atual do produto (não é snapshot)
+    product_name: Optional[str] = None
     quantity: Decimal
     unit_price: Decimal
     subtotal: Decimal
@@ -194,6 +253,132 @@ class SaleOut(BaseModel):
     customer_phone: Optional[str] = None
     delivery_payment_method: Optional[PaymentMethodEnum] = None
     is_paid: Optional[bool] = None
+    customer_id: Optional[int] = None
+    # Totais: total_amount = items_total + delivery_fee
+    items_total: Decimal = Decimal("0")
+    delivery_fee: Decimal = Decimal("0")
+    delivery_zone_id: Optional[int] = None
+    delivery_zone_name: Optional[str] = None
+    # Caixa que recebeu a venda (nulo em vendas OPEN e anteriores ao caixa único)
+    cash_register_id: Optional[int] = None
+    # Número do pedido no dia de operação (nulo em OPEN e vendas antigas)
+    daily_number: Optional[int] = None
+    business_date: Optional[date] = None
+    # Momento do recebimento (finalização PAID ou quitação)
+    paid_at: Optional[datetime] = None
+
+    model_config = {"from_attributes": True}
+
+
+class OrderTypeFilterEnum(str, enum.Enum):
+    """Filtro de tipo de pedido (Python-only). COUNTER ⇔ order_type nulo (Balcão)."""
+    COUNTER = "COUNTER"
+    PICKUP = "PICKUP"
+    DELIVERY = "DELIVERY"
+
+
+class BoardStatusCount(BaseModel):
+    status: SaleStatusEnum
+    count: int = 0
+    total: Decimal = Decimal("0")
+
+
+class BoardTypeCount(BaseModel):
+    order_type: OrderTypeFilterEnum
+    count: int = 0
+    pending_count: int = 0
+
+
+class SalesBoardOut(BaseModel):
+    business_date: date
+    generated_at: datetime
+    status_counts: list[BoardStatusCount] = []
+    type_counts: list[BoardTypeCount] = []
+    orders: list[SaleOut] = []
+
+
+# ─── Customers ───────────────────────────────────────────────────────────────
+
+def _normalize_phone(value: Optional[str]) -> Optional[str]:
+    """Remove não-dígitos; vazio → None; exige 10 ou 11 dígitos."""
+    if value is None:
+        return None
+    digits = re.sub(r"\D", "", str(value))
+    if not digits:
+        return None
+    if len(digits) not in (10, 11):
+        raise ValueError("Telefone inválido")
+    return digits
+
+
+class CustomerAddressCreate(BaseModel):
+    street: str = Field(min_length=1, max_length=255)
+    number: Optional[str] = Field(None, max_length=20)
+    complement: Optional[str] = Field(None, max_length=100)
+    neighborhood: str = Field(min_length=1, max_length=100)
+    reference: Optional[str] = Field(None, max_length=255)
+    is_default: bool = False
+    delivery_zone_id: Optional[int] = None
+
+
+class CustomerAddressUpdate(BaseModel):
+    street: Optional[str] = Field(None, min_length=1, max_length=255)
+    number: Optional[str] = Field(None, max_length=20)
+    complement: Optional[str] = Field(None, max_length=100)
+    neighborhood: Optional[str] = Field(None, min_length=1, max_length=100)
+    reference: Optional[str] = Field(None, max_length=255)
+    is_default: Optional[bool] = None
+    # null explícito remove o vínculo com a zona
+    delivery_zone_id: Optional[int] = None
+
+
+class CustomerAddressOut(BaseModel):
+    id: int
+    customer_id: int
+    street: str
+    number: Optional[str] = None
+    complement: Optional[str] = None
+    neighborhood: str
+    reference: Optional[str] = None
+    is_default: bool
+    delivery_zone_id: Optional[int] = None
+    delivery_zone: Optional[DeliveryZoneBrief] = None
+
+    model_config = {"from_attributes": True}
+
+
+class CustomerCreate(BaseModel):
+    name: str = Field(min_length=2, max_length=255)
+    phone: Optional[str] = None
+    notes: Optional[str] = Field(None, max_length=500)
+    addresses: list[CustomerAddressCreate] = []
+
+    @field_validator("phone", mode="before")
+    @classmethod
+    def validate_phone(cls, v):
+        return _normalize_phone(v)
+
+
+class CustomerUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=2, max_length=255)
+    phone: Optional[str] = None
+    notes: Optional[str] = Field(None, max_length=500)
+    is_active: Optional[bool] = None
+
+    @field_validator("phone", mode="before")
+    @classmethod
+    def validate_phone(cls, v):
+        return _normalize_phone(v)
+
+
+class CustomerOut(BaseModel):
+    id: int
+    name: str
+    phone: Optional[str] = None
+    notes: Optional[str] = None
+    is_active: bool
+    created_at: datetime
+    addresses: list[CustomerAddressOut] = []
 
     model_config = {"from_attributes": True}
 
@@ -223,6 +408,8 @@ class CashMovementOut(BaseModel):
     type: CashMovementTypeEnum
     amount: Decimal
     description: Optional[str]
+    payment_method: Optional[PaymentMethodEnum] = None
+    sale_id: Optional[int] = None
     user_id: int
     created_at: datetime
 
@@ -232,6 +419,9 @@ class CashMovementOut(BaseModel):
 class CashRegisterOut(BaseModel):
     id: int
     user_id: int
+    closed_by_user_id: Optional[int] = None
+    opened_by_name: Optional[str] = None
+    closed_by_name: Optional[str] = None
     status: CashRegisterStatusEnum
     opening_amount: Decimal
     closing_amount: Optional[Decimal]
@@ -247,16 +437,13 @@ class CashRegisterOut(BaseModel):
 
     @model_validator(mode="after")
     def compute_balance(self):
-        """Calcula saldo corrente e, se fechado, diferença entre contagem e sistema."""
-        balance = Decimal("0")
-        inflows = {CashMovementTypeEnum.OPENING, CashMovementTypeEnum.SALE, CashMovementTypeEnum.SUPRIMENTO}
-        outflows = {CashMovementTypeEnum.SANGRIA}
-        for m in self.movements:
-            if m.type in inflows:
-                balance += m.amount
-            elif m.type in outflows:
-                balance -= m.amount
-            # CLOSING é apenas registro da contagem física — não afeta saldo
+        """
+        Saldo de gaveta (somente dinheiro) pela regra única do serviço e,
+        se fechado, diferença entre contagem e saldo esperado.
+        """
+        from app.services.cash_register_service import CashRegisterService
+
+        balance = CashRegisterService.get_cash_balance(self)
         self.current_balance = balance
 
         if self.status == CashRegisterStatusEnum.CLOSED and self.closing_amount is not None:
@@ -265,3 +452,148 @@ class CashRegisterOut(BaseModel):
 
         return self
 
+
+class SalesChannelEnum(str, enum.Enum):
+    """Canal de venda derivado de Sale.order_type (Python-only, sem tipo no banco)."""
+    COUNTER = "COUNTER"    # Balcão (order_type nulo)
+    DELIVERY = "DELIVERY"  # Retirada (PICKUP) + Entrega (DELIVERY)
+
+
+class PaymentMethodTotal(BaseModel):
+    method: PaymentMethodEnum
+    amount: Decimal = Decimal("0")
+
+
+class ChannelSummary(BaseModel):
+    channel: SalesChannelEnum
+    sales_count: int = 0
+    net_total: Decimal = Decimal("0")
+    delivery_fees_total: Decimal = Decimal("0")
+    by_payment_method: list[PaymentMethodTotal] = []
+
+
+class CashRegisterSummaryOut(BaseModel):
+    register_id: int
+    status: CashRegisterStatusEnum
+    opened_at: datetime
+    closed_at: Optional[datetime] = None
+    opened_by_name: Optional[str] = None
+    closed_by_name: Optional[str] = None
+    opening_amount: Decimal
+    suprimentos_total: Decimal = Decimal("0")
+    sangrias_total: Decimal = Decimal("0")
+    gross_total: Decimal = Decimal("0")
+    cancellations_total: Decimal = Decimal("0")
+    net_total: Decimal = Decimal("0")
+    by_payment_method: list[PaymentMethodTotal] = []
+    by_channel: list[ChannelSummary] = []
+    delivery_fees_total: Decimal = Decimal("0")
+    sales_count: int = 0
+    canceled_count: int = 0
+    pending_count: int = 0
+    pending_total: Decimal = Decimal("0")
+    expected_cash: Decimal = Decimal("0")
+    closing_amount: Optional[Decimal] = None
+    difference: Optional[Decimal] = None
+
+
+class CashRegisterListItem(BaseModel):
+    id: int
+    status: CashRegisterStatusEnum
+    opened_at: datetime
+    closed_at: Optional[datetime] = None
+    opened_by_name: Optional[str] = None
+    closed_by_name: Optional[str] = None
+    opening_amount: Decimal
+    closing_amount: Optional[Decimal] = None
+    expected_balance: Decimal = Decimal("0")
+    difference: Optional[Decimal] = None
+
+
+class CashRegisterPage(BaseModel):
+    items: list[CashRegisterListItem] = []
+    total: int = 0
+    page: int = 1
+    page_size: int = 20
+
+
+# ─── Reports ─────────────────────────────────────────────────────────────────
+
+class TopProductsOrderEnum(str, enum.Enum):
+    """Critério de ordenação de `top_products`."""
+    REVENUE = "revenue"
+    QUANTITY = "quantity"
+
+
+class ReportTotals(BaseModel):
+    paid_count: int = 0
+    gross_total: Decimal = Decimal("0.00")
+    items_total: Decimal = Decimal("0.00")
+    delivery_fees_total: Decimal = Decimal("0.00")
+    avg_ticket: Decimal = Decimal("0.00")
+
+
+class ReportCountTotal(BaseModel):
+    count: int = 0
+    total: Decimal = Decimal("0.00")
+
+
+class ReportPaymentMethod(BaseModel):
+    method: PaymentMethodEnum
+    amount: Decimal = Decimal("0.00")
+    count: int = 0
+
+
+class ReportChannel(BaseModel):
+    channel: OrderTypeFilterEnum
+    count: int = 0
+    gross_total: Decimal = Decimal("0.00")
+    items_total: Decimal = Decimal("0.00")
+    delivery_fees_total: Decimal = Decimal("0.00")
+    avg_ticket: Decimal = Decimal("0.00")
+
+
+class ReportTopProduct(BaseModel):
+    product_id: int
+    product_name: str
+    quantity: Decimal = Decimal("0.000")
+    revenue: Decimal = Decimal("0.00")
+    sales_count: int = 0
+
+
+class ReportDay(BaseModel):
+    date: date
+    count: int = 0
+    gross_total: Decimal = Decimal("0.00")
+    items_total: Decimal = Decimal("0.00")
+    delivery_fees_total: Decimal = Decimal("0.00")
+
+
+class ReportZone(BaseModel):
+    zone_id: Optional[int] = None
+    zone_name: str
+    count: int = 0
+    delivery_fees_total: Decimal = Decimal("0.00")
+    gross_total: Decimal = Decimal("0.00")
+
+
+class ReportOperator(BaseModel):
+    user_id: int
+    user_name: str
+    count: int = 0
+    gross_total: Decimal = Decimal("0.00")
+
+
+class SalesSummaryOut(BaseModel):
+    start_date: date
+    end_date: date
+    generated_at: datetime
+    totals: ReportTotals
+    canceled: ReportCountTotal
+    pending: ReportCountTotal
+    by_payment_method: list[ReportPaymentMethod] = []
+    by_channel: list[ReportChannel] = []
+    top_products: list[ReportTopProduct] = []
+    by_day: list[ReportDay] = []
+    by_zone: list[ReportZone] = []
+    by_operator: list[ReportOperator] = []

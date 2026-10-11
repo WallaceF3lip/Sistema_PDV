@@ -24,10 +24,14 @@ export class SidebarComponent {
   navItems: NavItem[] = [
     { icon: '▦', label: 'Dashboard', route: '/dashboard' },
     { icon: '◎', label: 'Vendas', route: '/sales' },
+    { icon: '▣', label: 'Pedidos do Dia', route: '/orders' },
     { icon: '≡', label: 'Histórico de Vendas', route: '/sales-history' },
+    { icon: '☺', label: 'Clientes', route: '/customers' },
+    { icon: '⌖', label: 'Zonas de Entrega', route: '/delivery-zones', adminOnly: true },
     { icon: '☰', label: 'Produtos', route: '/products' },
     { icon: '▤', label: 'Estoque', route: '/stock' },
     { icon: '◈', label: 'Caixa', route: '/cash-register' },
+    { icon: '◫', label: 'Relatórios', route: '/reports', adminOnly: true },
     { icon: '◉', label: 'Usuários', route: '/users', adminOnly: true },
   ];
 

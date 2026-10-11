@@ -2,7 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.database import Base, engine
-from app.routers import auth, users, products, stock, sales, cash_registers
+from app.routers import (
+    auth, users, products, stock, sales, cash_registers, customers, delivery_zones, reports,
+)
 
 # Cria tabelas se não existirem (em produção, prefira Alembic)
 Base.metadata.create_all(bind=engine)
@@ -27,6 +29,9 @@ app.include_router(products.router)
 app.include_router(stock.router)
 app.include_router(sales.router)
 app.include_router(cash_registers.router)
+app.include_router(customers.router)
+app.include_router(delivery_zones.router)
+app.include_router(reports.router)
 
 
 @app.get("/", tags=["health"])

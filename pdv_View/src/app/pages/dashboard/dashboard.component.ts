@@ -38,13 +38,6 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   averageTicket = 0;
   chartsLoading = true;
 
-  teste(){
-    console.log('totalSales: ' + this.totalSales);
-    console.log('totalRevenue: ' + this.totalRevenue);
-    console.log('averageTicket: ' + this.averageTicket);
-    
-  }
-
   cards: DashboardCard[] = [
     {
       icon: '◎',
@@ -76,6 +69,13 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       label: 'Caixa',
       description: 'Gerenciar caixa',
       route: '/cash-register',
+    },
+    {
+      icon: '◫',
+      label: 'Relatórios',
+      description: 'Analisar vendas por período',
+      route: '/reports',
+      adminOnly: true,
     },
     {
       icon: '◉',
@@ -134,9 +134,6 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         } else {
           this.pendingSales = paidSales;
         }
-
-        console.log("sales: ", sales);
-        
       },
       error: () => {
         this.chartsLoading = false;

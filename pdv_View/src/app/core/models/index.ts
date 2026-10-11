@@ -4,3 +4,6 @@ export * from './product.model';
 export * from './sale.model';
 export * from './stock.model';
 export * from './cash-register.model';
+export * from './customer.model';
+export * from './delivery-zone.model';
+export * from './report.model';

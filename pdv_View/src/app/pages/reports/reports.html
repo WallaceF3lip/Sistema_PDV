@@ -1,0 +1,194 @@
+<div class="reports">
+  <!-- Cabeçalho -->
+  <div class="reports__header animate-slide-up">
+    <div>
+      <h2 class="headline-lg">Relatórios</h2>
+      <p class="body-md text-muted">
+        Valores por dia do pedido; pedidos pendentes não entram no faturamento.
+      </p>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="reports__filters card animate-slide-up" style="animation-delay: 40ms">
+    <div class="reports__presets" role="group" aria-label="Atalhos de período">
+      @for (p of presets; track p.key) {
+        <button type="button" class="btn reports__preset"
+          [class.btn-primary]="activePreset() === p.key"
+          [class.btn-outline]="activePreset() !== p.key"
+          [disabled]="loading()"
+          (click)="applyPreset(p.key)">
+          {{ p.label }}
+        </button>
+      }
+    </div>
+
+    <form class="reports__range" (ngSubmit)="applyRange()">
+      <div class="form-group">
+        <label class="label-sm text-muted" for="rep-start">DATA INICIAL</label>
+        <input id="rep-start" class="input-field" type="date" name="start"
+          [ngModel]="startDate()" (ngModelChange)="onStartDateChange($event)" required />
+      </div>
+      <div class="form-group">
+        <label class="label-sm text-muted" for="rep-end">DATA FINAL</label>
+        <input id="rep-end" class="input-field" type="date" name="end"
+          [ngModel]="endDate()" (ngModelChange)="onEndDateChange($event)" required />
+      </div>
+      <button type="submit" class="btn btn-secondary reports__apply"
+        [disabled]="!rangeValid() || loading()">
+        {{ loading() ? 'Carregando...' : 'Aplicar' }}
+      </button>
+    </form>
+
+    @if (rangeError()) {
+      <p class="reports__range-error body-sm" role="alert">{{ rangeError() }}</p>
+    }
+  </div>
+
+  @if (error()) {
+    <div class="reports__error card body-md" role="alert">
+      {{ error() }}
+      <button type="button" class="btn btn-ghost" (click)="load()" [disabled]="!rangeValid()">Tentar novamente</button>
+    </div>
+  }
+
+  @if (summary(); as s) {
+    <p class="reports__period body-sm text-muted">
+      Período: <strong>{{ periodLabel() }}</strong>
+      @if (loading()) { · atualizando... }
+    </p>
+
+    <!-- KPIs -->
+    <div class="reports__kpis animate-slide-up" [class.reports--loading]="loading()">
+      <div class="kpi-card card">
+        <span class="kpi-card__value">{{ brl(s.totals.gross_total) }}</span>
+        <span class="kpi-card__label body-sm text-muted">Faturamento</span>
+      </div>
+      <div class="kpi-card card">
+        <span class="kpi-card__value">{{ s.totals.paid_count }}</span>
+        <span class="kpi-card__label body-sm text-muted">Pedidos pagos</span>
+      </div>
+      <div class="kpi-card card">
+        <span class="kpi-card__value">{{ brl(s.totals.avg_ticket) }}</span>
+        <span class="kpi-card__label body-sm text-muted">Ticket médio</span>
+      </div>
+      <div class="kpi-card card">
+        <span class="kpi-card__value">{{ brl(s.totals.delivery_fees_total) }}</span>
+        <span class="kpi-card__label body-sm text-muted">Taxas de entrega</span>
+      </div>
+      <div class="kpi-card card">
+        <span class="kpi-card__value">{{ brl(s.pending.total) }}</span>
+        <span class="kpi-card__label body-sm text-muted">A receber ({{ s.pending.count }})</span>
+      </div>
+      <div class="kpi-card card">
+        <span class="kpi-card__value">{{ brl(s.canceled.total) }}</span>
+        <span class="kpi-card__label body-sm text-muted">Cancelados ({{ s.canceled.count }})</span>
+      </div>
+    </div>
+  }
+
+  <!-- Gráficos (canvases sempre no DOM para os @ViewChild) -->
+  <div class="reports__charts" [class.reports__charts--hidden]="!summary()" [class.reports--loading]="loading()">
+    <div class="chart-card card reports__chart--wide">
+      <div class="chart-card__head">
+        <div>
+          <h3 class="headline-md chart-card__title">Faturamento por dia</h3>
+          <p class="body-sm text-muted chart-card__subtitle">Faturamento e quantidade de pedidos pagos por dia de operação</p>
+        </div>
+        <button type="button" class="btn btn-ghost" (click)="exportDaysCsv()" [disabled]="!summary()">Exportar CSV</button>
+      </div>
+      <div class="chart-card__canvas-wrapper">
+        @if (!hasSales()) {
+          <div class="chart-card__empty body-md text-muted">Sem vendas no período</div>
+        }
+        <canvas #dayChartCanvas [class.is-hidden]="!hasSales()"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card card">
+      <h3 class="headline-md chart-card__title">Formas de pagamento</h3>
+      <p class="body-sm text-muted chart-card__subtitle">Valores recebidos por forma de pagamento</p>
+      <div class="chart-card__canvas-wrapper chart-card__canvas-wrapper--pie">
+        @if (!hasSales()) {
+          <div class="chart-card__empty body-md text-muted">Sem vendas no período</div>
+        }
+        <canvas #paymentChartCanvas [class.is-hidden]="!hasSales()"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card card">
+      <h3 class="headline-md chart-card__title">Por canal</h3>
+      <p class="body-sm text-muted chart-card__subtitle">Balcão, Retirada e Entrega</p>
+      <div class="chart-card__canvas-wrapper">
+        @if (!hasSales()) {
+          <div class="chart-card__empty body-md text-muted">Sem vendas no período</div>
+        }
+        <canvas #channelChartCanvas [class.is-hidden]="!hasSales()"></canvas>
+      </div>
+    </div>
+  </div>
+
+  @if (summary()) {
+    <!-- Produtos mais vendidos -->
+    <section class="reports__section card">
+      <div class="reports__section-head">
+        <h3 class="headline-md">Produtos mais vendidos</h3>
+        <div class="reports__section-actions">
+          <div class="reports__toggle" role="group" aria-label="Ordenar por">
+            <button type="button" class="btn"
+              [class.btn-primary]="topBy() === 'revenue'" [class.btn-outline]="topBy() !== 'revenue'"
+              [disabled]="loading()" (click)="setTopBy('revenue')">Receita</button>
+            <button type="button" class="btn"
+              [class.btn-primary]="topBy() === 'quantity'" [class.btn-outline]="topBy() !== 'quantity'"
+              [disabled]="loading()" (click)="setTopBy('quantity')">Quantidade</button>
+          </div>
+          <button type="button" class="btn btn-ghost" (click)="exportProductsCsv()">Exportar CSV</button>
+        </div>
+      </div>
+
+      <app-data-table [columns]="productColumns" [data]="topProducts" [loading]="loading"
+        emptyMessage="Nenhum produto vendido no período">
+        <ng-template dtCell="position" let-row>
+          <span class="text-muted">{{ row.position }}</span>
+        </ng-template>
+        <ng-template dtCell="quantity" let-row>
+          {{ qty(row.quantity) }}
+        </ng-template>
+        <ng-template dtCell="revenue" let-row>
+          <span class="text-accent">{{ brl(row.revenue) }}</span>
+        </ng-template>
+      </app-data-table>
+    </section>
+
+    <div class="reports__tables">
+      <!-- Entregas por zona -->
+      <section class="reports__section card">
+        <div class="reports__section-head">
+          <h3 class="headline-md">Entregas por zona</h3>
+        </div>
+        <app-data-table [columns]="zoneColumns" [data]="zones" [loading]="loading"
+          emptyMessage="Nenhuma entrega paga no período">
+          <ng-template dtCell="delivery_fees_total" let-row>{{ brl(row.delivery_fees_total) }}</ng-template>
+          <ng-template dtCell="gross_total" let-row>
+            <span class="text-accent">{{ brl(row.gross_total) }}</span>
+          </ng-template>
+        </app-data-table>
+      </section>
+
+      <!-- Por operador -->
+      <section class="reports__section card">
+        <div class="reports__section-head">
+          <h3 class="headline-md">Por operador</h3>
+        </div>
+        <app-data-table [columns]="operatorColumns" [data]="operators" [loading]="loading"
+          emptyMessage="Nenhuma venda paga no período">
+          <ng-template dtCell="gross_total" let-row>
+            <span class="text-accent">{{ brl(row.gross_total) }}</span>
+          </ng-template>
+        </app-data-table>
+      </section>
+    </div>
+  } @else if (loading()) {
+    <p class="body-md text-muted reports__placeholder">Carregando relatório...</p>
+  }
+</div>
