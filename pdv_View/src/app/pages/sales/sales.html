@@ -76,13 +76,29 @@
         </div>
 
         <div class="cart-footer">
+          @if (cartDeliveryFee() > 0) {
+            <div class="cart-subtotal">
+              <span class="body-md text-muted">Itens</span>
+              <span class="body-md">R$ {{ currentSale()?.items_total ?? 0 | number:'1.2-2' }}</span>
+            </div>
+            <div class="cart-subtotal">
+              <span class="body-md text-muted">Taxa de entrega</span>
+              <span class="body-md">R$ {{ currentSale()?.delivery_fee ?? 0 | number:'1.2-2' }}</span>
+            </div>
+          }
+          @if (noCashRegister()) {
+            <div class="cash-closed-alert" role="alert">
+              <span class="body-sm">Caixa fechado — abra o caixa para finalizar vendas</span>
+              <a class="btn btn-outline cash-closed-alert__link" routerLink="/cash-register">Ir para o Caixa</a>
+            </div>
+          }
           <div class="cart-total">
             <span class="body-md text-muted">Total</span>
             <span class="display-md">R$ {{ currentSale()?.total_amount || 0 | number:'1.2-2' }}</span>
           </div>
           <button
             class="btn btn-primary btn-lg btn-block"
-            [disabled]="!currentSale() || currentSale()!.items.length === 0"
+            [disabled]="!currentSale() || currentSale()!.items.length === 0 || !cashRegister()"
             (click)="openCheckout()"
           >
             Continuar
@@ -98,6 +114,7 @@
         [products]="products()"
         (completed)="onCheckoutCompleted()"
         (cancelled)="onCheckoutCancelled()"
+        (saleUpdated)="onCheckoutSaleUpdated($event)"
       />
     }
 

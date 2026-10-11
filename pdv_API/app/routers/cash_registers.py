@@ -1,15 +1,21 @@
-from fastapi import APIRouter, Depends, HTTPException
+import datetime as dt
+from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.security import get_current_user, require_admin
-from app.models.cash_register import CashRegister
+from app.models.cash_register import CashRegister, CashRegisterStatusEnum
+from app.models.user import RoleEnum
 from app.schemas.schemas import (
     CashRegisterOpen,
     CashRegisterClose,
     CashMovementCreate,
     CashMovementOut,
     CashRegisterOut,
+    CashRegisterPage,
+    CashRegisterSummaryOut,
 )
 from app.services.cash_register_service import CashRegisterService
 
@@ -23,7 +29,10 @@ def open_register(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    """Abre uma nova sessão de caixa com fundo de troco."""
+    """
+    Abre o caixa único do estabelecimento com fundo de troco.
+    409 se já existir um caixa aberto (de qualquer usuário).
+    """
     return CashRegisterService.open_register(
         db=db,
         user_id=current_user.id,
@@ -32,13 +41,45 @@ def open_register(
     )
 
 
-# GET — Consultar caixa aberto do operador logado
+# GET — Histórico de caixas (somente ADMIN)
+@router.get("/", response_model=CashRegisterPage)
+def list_registers(
+    start_date: Optional[dt.date] = None,
+    end_date: Optional[dt.date] = None,
+    status: Optional[CashRegisterStatusEnum] = None,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+    _=Depends(require_admin),
+):
+    """Lista caixas (mais recentes primeiro), paginado, com filtro por período de abertura e status."""
+    return CashRegisterService.list_registers(
+        db=db,
+        start_date=start_date,
+        end_date=end_date,
+        status=status,
+        page=page,
+        page_size=page_size,
+    )
+
+
+# GET — Caixa atual (compartilhado); null se não houver
+@router.get("/current", response_model=CashRegisterOut | None)
+def get_current_register(
+    db: Session = Depends(get_db),
+    _=Depends(get_current_user),
+):
+    """Retorna o caixa aberto do estabelecimento ou null (200) se não houver."""
+    return CashRegisterService.get_current_register(db)
+
+
+# GET — Alias legado
 @router.get("/my-open", response_model=CashRegisterOut)
 def get_my_open_register(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    """Retorna o caixa OPEN do operador logado."""
+    """Depreciado — use /current. Retorna o caixa compartilhado aberto (404 se não houver)."""
     return CashRegisterService.get_my_open_register(db=db, user_id=current_user.id)
 
 
@@ -54,6 +95,24 @@ def get_register(
     if not register:
         raise HTTPException(status_code=404, detail="Caixa não encontrado")
     return register
+
+
+# GET — Resumo do caixa (OPEN: qualquer usuário; CLOSED: somente ADMIN)
+@router.get("/{register_id}/summary", response_model=CashRegisterSummaryOut)
+def get_register_summary(
+    register_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Totais por forma de pagamento, por canal Balcão vs Delivery, taxas, pendentes e dinheiro esperado."""
+    register = db.query(CashRegister).filter(CashRegister.id == register_id).first()
+    if not register:
+        raise HTTPException(status_code=404, detail="Caixa não encontrado")
+    if register.status != CashRegisterStatusEnum.OPEN and current_user.role != RoleEnum.ADMIN:
+        raise HTTPException(
+            status_code=403, detail="Apenas administradores podem consultar caixas fechados"
+        )
+    return CashRegisterService.build_summary(db, register)
 
 
 # GET — Listar movimentações de um caixa

@@ -1,0 +1,101 @@
+<div class="cash-summary">
+  <div class="cash-summary__channels">
+    @for (ch of channels(); track ch.channel) {
+      <section class="summary-block card card--flat">
+        <header class="summary-block__header">
+          <h4 class="title-md">{{ channelLabels[ch.channel] }}</h4>
+          <span class="badge badge--muted">
+            {{ ch.sales_count }} {{ ch.sales_count === 1 ? 'venda' : 'vendas' }}
+          </span>
+        </header>
+
+        <div class="summary-block__total">
+          <span class="label-sm text-muted">TOTAL</span>
+          <span class="headline-md">R$ {{ toNumber(ch.net_total) | number:'1.2-2' }}</span>
+        </div>
+
+        <dl class="summary-list">
+          @for (m of methods; track m) {
+            <div class="summary-list__row">
+              <dt class="body-sm text-muted">{{ methodLabel(m) }}</dt>
+              <dd class="body-md">R$ {{ amountFor(ch.by_payment_method, m) | number:'1.2-2' }}</dd>
+            </div>
+          }
+          @if (ch.channel === 'DELIVERY') {
+            <div class="summary-list__row summary-list__row--sep">
+              <dt class="body-sm text-muted">Taxas de entrega</dt>
+              <dd class="body-md">R$ {{ toNumber(ch.delivery_fees_total) | number:'1.2-2' }}</dd>
+            </div>
+          }
+        </dl>
+      </section>
+    }
+  </div>
+
+  <section class="summary-block summary-block--general card card--flat">
+    <header class="summary-block__header">
+      <h4 class="title-md">Geral</h4>
+      <span class="body-sm text-muted">
+        {{ summary.sales_count }} {{ summary.sales_count === 1 ? 'venda' : 'vendas' }}
+      </span>
+    </header>
+
+    <div class="summary-general">
+      <dl class="summary-list">
+        <div class="summary-list__row">
+          <dt class="body-sm text-muted">Total líquido</dt>
+          <dd class="title-md">R$ {{ toNumber(summary.net_total) | number:'1.2-2' }}</dd>
+        </div>
+        @for (m of methods; track m) {
+          <div class="summary-list__row">
+            <dt class="body-sm text-muted">{{ methodLabel(m) }}</dt>
+            <dd class="body-md">R$ {{ amountFor(summary.by_payment_method, m) | number:'1.2-2' }}</dd>
+          </div>
+        }
+        <div class="summary-list__row">
+          <dt class="body-sm text-muted">Estornos ({{ summary.canceled_count }})</dt>
+          <dd class="body-md" [class.text-error]="toNumber(summary.cancellations_total) > 0">
+            R$ {{ toNumber(summary.cancellations_total) | number:'1.2-2' }}
+          </dd>
+        </div>
+        <div class="summary-list__row">
+          <dt class="body-sm text-muted">A receber ({{ summary.pending_count }} {{ summary.pending_count === 1 ? 'pedido' : 'pedidos' }})</dt>
+          <dd class="body-md">R$ {{ toNumber(summary.pending_total) | number:'1.2-2' }}</dd>
+        </div>
+      </dl>
+
+      <dl class="summary-list">
+        <div class="summary-list__row">
+          <dt class="body-sm text-muted">Fundo de troco</dt>
+          <dd class="body-md">R$ {{ toNumber(summary.opening_amount) | number:'1.2-2' }}</dd>
+        </div>
+        <div class="summary-list__row">
+          <dt class="body-sm text-muted">Suprimentos</dt>
+          <dd class="body-md">R$ {{ toNumber(summary.suprimentos_total) | number:'1.2-2' }}</dd>
+        </div>
+        <div class="summary-list__row">
+          <dt class="body-sm text-muted">Sangrias</dt>
+          <dd class="body-md">R$ {{ toNumber(summary.sangrias_total) | number:'1.2-2' }}</dd>
+        </div>
+        <div class="summary-list__row summary-list__row--sep">
+          <dt class="body-sm text-muted">Dinheiro esperado na gaveta</dt>
+          <dd class="title-md">R$ {{ toNumber(summary.expected_cash) | number:'1.2-2' }}</dd>
+        </div>
+        @if (isClosed() && summary.closing_amount !== null) {
+          <div class="summary-list__row">
+            <dt class="body-sm text-muted">Contagem informada</dt>
+            <dd class="body-md">R$ {{ toNumber(summary.closing_amount) | number:'1.2-2' }}</dd>
+          </div>
+          <div class="summary-list__row">
+            <dt class="body-sm text-muted">Diferença</dt>
+            <dd class="title-md"
+              [class.text-accent]="toNumber(summary.difference) >= 0"
+              [class.text-error]="toNumber(summary.difference) < 0">
+              R$ {{ toNumber(summary.difference) | number:'1.2-2' }}
+            </dd>
+          </div>
+        }
+      </dl>
+    </div>
+  </section>
+</div>

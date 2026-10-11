@@ -31,7 +31,7 @@ class User(Base):
         "StockMovement", back_populates="user"
     )
     cash_registers: Mapped[list["CashRegister"]] = relationship(
-        "CashRegister", back_populates="user"
+        "CashRegister", back_populates="user", foreign_keys="CashRegister.user_id"
     )
     cash_movements: Mapped[list["CashMovement"]] = relationship(
         "CashMovement", back_populates="user"

@@ -2,66 +2,69 @@
   <div class="cash-register__header">
     <div>
       <h2 class="headline-lg">Caixa</h2>
-      <p class="body-md text-muted">Gerenciar sessão de caixa</p>
+      <p class="body-md text-muted">Caixa único do estabelecimento, compartilhado por todos os operadores</p>
     </div>
   </div>
 
-  @if (!register) {
-  <!-- Sem caixa aberto -->
-  <div class="cash-register__open card animate-scale-in">
-    <div class="cash-register__open-content">
-      <span class="cash-register__icon">◈</span>
-      <h3 class="headline-md">Nenhum caixa aberto</h3>
-      <p class="body-md text-muted">Abra uma sessão de caixa para começar</p>
-
-      <form class="open-form" (ngSubmit)="openRegister()">
-        <div class="form-group">
-          <label class="label-sm text-muted">FUNDO DE TROCO (R$)</label>
-          <input class="input-field" type="number" step="0.01" [(ngModel)]="openingAmount" name="opening" required />
-        </div>
-        <button type="submit" class="btn btn-primary btn-lg btn-block" [disabled]="isLoading()">
-          Abrir Caixa
-        </button>
-      </form>
+  @if (authService.isAdmin()) {
+    <div class="cash-tabs" role="tablist">
+      <button type="button" role="tab" class="cash-tabs__tab"
+        [class.cash-tabs__tab--active]="activeTab() === 'current'"
+        [attr.aria-selected]="activeTab() === 'current'"
+        (click)="selectTab('current')">Caixa atual</button>
+      <button type="button" role="tab" class="cash-tabs__tab"
+        [class.cash-tabs__tab--active]="activeTab() === 'history'"
+        [attr.aria-selected]="activeTab() === 'history'"
+        (click)="selectTab('history')">Histórico</button>
     </div>
-  </div>
+  }
 
-  } @else {
-  <!-- Caixa aberto -->
+  @if (activeTab() === 'current') {
+  @if (register(); as reg) {
+  <!-- Caixa compartilhado -->
   <div class="cash-register__content">
 
     <!-- Status do caixa -->
     <div class="cash-register__status card animate-slide-up">
       <div class="status-header">
-        <span class="badge"
-          [class.badge--accent]="register.status === 'OPEN'"
-          [class.badge--muted]="register.status === 'CLOSED'">
-          {{ register.status === 'OPEN' ? 'ABERTO' : 'FECHADO' }}
+        <div class="status-header__info">
+          <span class="badge"
+            [class.badge--accent]="reg.status === 'OPEN'"
+            [class.badge--muted]="reg.status === 'CLOSED'">
+            {{ reg.status === 'OPEN' ? 'ABERTO' : 'FECHADO' }}
+          </span>
+          <span class="body-sm text-muted">Caixa #{{ reg.id }}</span>
+        </div>
+        <span class="body-sm text-muted status-header__who">
+          Aberto por <strong>{{ reg.opened_by_name || '—' }}</strong> às {{ reg.opened_at | date:'HH:mm' }}
+          @if (reg.status === 'CLOSED') {
+            · Fechado por <strong>{{ reg.closed_by_name || '—' }}</strong>
+            @if (reg.closed_at) { às {{ reg.closed_at | date:'HH:mm' }} }
+          }
         </span>
-        <span class="body-sm text-muted">Caixa #{{ register.id }}</span>
       </div>
 
       <div class="status-balance">
-        <span class="label-sm text-muted">SALDO ATUAL</span>
-        <span class="display-md">R$ {{ register.current_balance | number:'1.2-2' }}</span>
+        <span class="label-sm text-muted">DINHEIRO NA GAVETA</span>
+        <span class="display-md">R$ {{ reg.current_balance | number:'1.2-2' }}</span>
       </div>
 
       <div class="status-details">
         <div class="status-detail">
-          <span class="body-sm text-muted">Abertura</span>
-          <span class="title-md">R$ {{ register.opening_amount | number:'1.2-2' }}</span>
+          <span class="body-sm text-muted">Fundo de troco</span>
+          <span class="title-md">R$ {{ reg.opening_amount | number:'1.2-2' }}</span>
         </div>
-        @if (register.closing_amount !== null) {
+        @if (reg.closing_amount !== null) {
           <div class="status-detail">
-            <span class="body-sm text-muted">Fechamento</span>
-            <span class="title-md">R$ {{ register.closing_amount | number:'1.2-2' }}</span>
+            <span class="body-sm text-muted">Contagem</span>
+            <span class="title-md">R$ {{ reg.closing_amount | number:'1.2-2' }}</span>
           </div>
           <div class="status-detail">
             <span class="body-sm text-muted">Diferença</span>
             <span class="title-md"
-              [class.text-accent]="register.difference! >= 0"
-              [class.text-error]="register.difference! < 0">
-              R$ {{ register.difference | number:'1.2-2' }}
+              [class.text-accent]="toNumber(reg.difference) >= 0"
+              [class.text-error]="toNumber(reg.difference) < 0">
+              R$ {{ reg.difference | number:'1.2-2' }}
             </span>
           </div>
         }
@@ -69,11 +72,24 @@
     </div>
 
     <!-- Botões de ação -->
-    @if (register.status === 'OPEN' && authService.isAdmin()) {
+    @if (reg.status === 'OPEN' && authService.isAdmin()) {
       <div class="cash-register__actions animate-slide-up" style="animation-delay: 100ms">
         <button class="btn btn-outline btn-lg" (click)="showSangriaModal = true">↓ Sangria</button>
         <button class="btn btn-outline btn-lg" (click)="showSuprimentoModal = true">↑ Suprimento</button>
-        <button class="btn btn-primary btn-lg" (click)="showCloseModal = true">Fechar Caixa</button>
+        <button class="btn btn-primary btn-lg" (click)="openCloseModal()">Fechar Caixa</button>
+      </div>
+    }
+    @if (reg.status === 'CLOSED') {
+      <div class="cash-register__actions animate-slide-up">
+        <button class="btn btn-primary btn-lg" (click)="loadRegister()">Abrir novo caixa</button>
+      </div>
+    }
+
+    <!-- Resumo Balcão vs Delivery -->
+    @if (summary(); as s) {
+      <div class="cash-register__summary animate-slide-up" style="animation-delay: 150ms">
+        <h3 class="title-lg">Resumo</h3>
+        <app-cash-summary [summary]="s" />
       </div>
     }
 
@@ -91,8 +107,9 @@
         <ng-template dtCell="type" let-row>
           <span class="badge"
             [class.badge--accent]="isInflow(row.type)"
-            [class.badge--primary]="!isInflow(row.type)">
-            {{ movementTypeLabel(row.type) }}
+            [class.badge--primary]="!isInflow(row.type) && !isNeutral(row.type)"
+            [class.badge--muted]="isNeutral(row.type)">
+            {{ movementTypeLabel(row) }}
           </span>
         </ng-template>
 
@@ -112,19 +129,161 @@
 
         <!-- Valor com sinal e cor -->
         <ng-template dtCell="amount" let-row>
-          <span class="title-md"
-            [class.text-accent]="isInflow(row.type)"
-            [class.text-error]="!isInflow(row.type)">
-            {{ isInflow(row.type) ? '+' : '-' }} R$ {{ row.amount | number:'1.2-2' }}
-          </span>
+          @if (isNeutral(row.type)) {
+            <span class="title-md text-muted">R$ {{ row.amount | number:'1.2-2' }}</span>
+          } @else {
+            <span class="title-md"
+              [class.text-accent]="isInflow(row.type)"
+              [class.text-error]="!isInflow(row.type)">
+              {{ isInflow(row.type) ? '+' : '-' }} R$ {{ row.amount | number:'1.2-2' }}
+            </span>
+          }
         </ng-template>
 
       </app-data-table>
     </div>
 
   </div>
+  } @else {
+  <!-- Sem caixa aberto: qualquer usuário pode abrir -->
+  <div class="cash-register__open card animate-scale-in">
+    <div class="cash-register__open-content">
+      <span class="cash-register__icon">◈</span>
+      <h3 class="headline-md">Nenhum caixa aberto</h3>
+      <p class="body-md text-muted">Abra o caixa para começar a finalizar vendas</p>
+
+      <form class="open-form" (ngSubmit)="openRegister()">
+        <div class="form-group">
+          <label class="label-sm text-muted">FUNDO DE TROCO (R$)</label>
+          <input class="input-field" type="number" step="0.01" min="0" [(ngModel)]="openingAmount" name="opening" required />
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg btn-block" [disabled]="isLoading()">
+          Abrir Caixa
+        </button>
+      </form>
+    </div>
+  </div>
+  }
+  }
+
+  @if (activeTab() === 'history' && authService.isAdmin()) {
+  <!-- Histórico de caixas (ADMIN) -->
+  <div class="cash-history animate-fade-in">
+    <div class="cash-history__filters card">
+      <div class="form-group">
+        <label class="label-sm text-muted">DE</label>
+        <input class="input-field" type="date" [(ngModel)]="filterStart" name="filterStart" />
+      </div>
+      <div class="form-group">
+        <label class="label-sm text-muted">ATÉ</label>
+        <input class="input-field" type="date" [(ngModel)]="filterEnd" name="filterEnd" />
+      </div>
+      <div class="cash-history__filter-actions">
+        <button class="btn btn-secondary" type="button" (click)="clearHistoryFilters()">Limpar</button>
+        <button class="btn btn-primary" type="button" (click)="searchHistory()">Buscar</button>
+      </div>
+    </div>
+
+    <app-data-table
+      [columns]="historyColumns"
+      [data]="history"
+      [loading]="historyLoading"
+      emptyMessage="Nenhum caixa encontrado no período">
+
+      <ng-template dtCell="opened_at" let-row>
+        <span class="body-sm">{{ row.opened_at | date:'dd/MM/yy HH:mm' }}</span>
+      </ng-template>
+
+      <ng-template dtCell="closed_at" let-row>
+        <span class="body-sm" [class.text-muted]="!row.closed_at">
+          {{ row.closed_at ? (row.closed_at | date:'dd/MM/yy HH:mm') : '—' }}
+        </span>
+      </ng-template>
+
+      <ng-template dtCell="opened_by_name" let-row>
+        <span class="body-md">{{ row.opened_by_name || '—' }}</span>
+      </ng-template>
+
+      <ng-template dtCell="closed_by_name" let-row>
+        <span class="body-md" [class.text-muted]="!row.closed_by_name">{{ row.closed_by_name || '—' }}</span>
+      </ng-template>
+
+      <ng-template dtCell="expected_balance" let-row>
+        <span class="body-md">R$ {{ row.expected_balance | number:'1.2-2' }}</span>
+      </ng-template>
+
+      <ng-template dtCell="closing_amount" let-row>
+        @if (row.closing_amount !== null) {
+          <span class="body-md">R$ {{ row.closing_amount | number:'1.2-2' }}</span>
+        } @else {
+          <span class="text-muted">—</span>
+        }
+      </ng-template>
+
+      <ng-template dtCell="difference" let-row>
+        @if (row.difference !== null) {
+          <span class="title-md"
+            [class.text-accent]="toNumber(row.difference) >= 0"
+            [class.text-error]="toNumber(row.difference) < 0">
+            R$ {{ row.difference | number:'1.2-2' }}
+          </span>
+        } @else {
+          <span class="text-muted">—</span>
+        }
+      </ng-template>
+
+      <ng-template dtCell="status" let-row>
+        <span class="badge"
+          [class.badge--accent]="row.status === 'OPEN'"
+          [class.badge--muted]="row.status === 'CLOSED'">
+          {{ row.status === 'OPEN' ? 'ABERTO' : 'FECHADO' }}
+        </span>
+      </ng-template>
+
+      <ng-template dtCell="actions" let-row>
+        <button class="btn btn-ghost cash-history__view-btn" type="button"
+          [disabled]="summaryLoadingId() === row.id"
+          (click)="viewSummary(row)">
+          Resumo
+        </button>
+      </ng-template>
+    </app-data-table>
+
+    <div class="cash-history__pagination">
+      <button class="btn btn-outline" type="button"
+        [disabled]="historyPage() <= 1 || historyLoading()"
+        (click)="prevHistoryPage()">‹ Anterior</button>
+      <span class="body-sm text-muted">
+        Página {{ historyPage() }} de {{ historyTotalPages() }} · {{ historyTotal() }} {{ historyTotal() === 1 ? 'caixa' : 'caixas' }}
+      </span>
+      <button class="btn btn-outline" type="button"
+        [disabled]="historyPage() >= historyTotalPages() || historyLoading()"
+        (click)="nextHistoryPage()">Próximo ›</button>
+    </div>
+  </div>
   }
 </div>
+
+<!-- Modal Resumo (histórico) -->
+@if (selectedSummary(); as hs) {
+<div class="glass-overlay" (click)="closeSummaryModal()">
+  <div class="modal-card modal-card--wide card animate-scale-in" (click)="$event.stopPropagation()">
+    <div class="summary-modal__header">
+      <div>
+        <h3 class="headline-md">Caixa #{{ hs.register_id }}</h3>
+        <p class="body-sm text-muted">
+          Aberto por {{ hs.opened_by_name || '—' }} em {{ hs.opened_at | date:'dd/MM/yy HH:mm' }}
+          @if (hs.closed_at) {
+            · Fechado por {{ hs.closed_by_name || '—' }} em {{ hs.closed_at | date:'dd/MM/yy HH:mm' }}
+          }
+        </p>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="closeSummaryModal()">Fechar</button>
+    </div>
+    <app-cash-summary [summary]="hs" />
+  </div>
+</div>
+}
 
 <!-- Modal Sangria -->
 @if (showSangriaModal) {
@@ -181,9 +340,33 @@
     <h3 class="headline-md">Fechar Caixa</h3>
     <p class="body-sm text-muted">Informe o valor contado fisicamente</p>
     <form class="modal-form" (ngSubmit)="closeRegister()">
+      <div class="close-preview">
+        <div class="close-preview__row">
+          <span class="body-sm text-muted">Dinheiro esperado na gaveta</span>
+          <span class="title-md">R$ {{ expectedCash() | number:'1.2-2' }}</span>
+        </div>
+      </div>
       <div class="form-group">
         <label class="label-sm text-muted">VALOR CONTADO (R$)</label>
-        <input class="input-field" type="number" step="0.01" [(ngModel)]="closingAmount" name="closing" required />
+        <input class="input-field" type="number" step="0.01" min="0" [(ngModel)]="closingAmount" name="closing" required />
+      </div>
+      <div class="close-preview">
+        <div class="close-preview__row">
+          <span class="body-sm text-muted">Diferença</span>
+          <span class="title-md"
+            [class.text-accent]="closeDifference() >= 0"
+            [class.text-error]="closeDifference() < 0">
+            R$ {{ closeDifference() | number:'1.2-2' }}
+          </span>
+        </div>
+        @if (summary(); as s) {
+          @if (s.pending_count > 0) {
+            <p class="body-sm text-muted">
+              {{ s.pending_count }} {{ s.pending_count === 1 ? 'pedido a receber poderá' : 'pedidos a receber poderão' }}
+              ser quitado(s) no próximo caixa.
+            </p>
+          }
+        }
       </div>
       <div class="modal-actions">
         <button type="button" class="btn btn-secondary" (click)="showCloseModal = false">Cancelar</button>

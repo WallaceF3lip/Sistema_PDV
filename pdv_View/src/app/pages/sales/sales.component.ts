@@ -1,16 +1,18 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { SaleService } from '../../core/services/sale.service';
 import { ProductService } from '../../core/services/product.service';
 import { ToastService } from '../../core/services/toast.service';
-import { Sale, Product, SaleItem } from '../../core/models';
+import { CashRegisterService } from '../../core/services/cash-register.service';
+import { Sale, Product, SaleItem, CashRegister } from '../../core/models';
 import { SaleCheckoutModalComponent } from './sale-checkout-modal/sale-checkout-modal.component';
 
 @Component({
   selector: 'app-sales',
   standalone: true,
-  imports: [CommonModule, FormsModule, SaleCheckoutModalComponent],
+  imports: [CommonModule, FormsModule, RouterLink, SaleCheckoutModalComponent],
   templateUrl: './sales.html',
   styleUrl: './sales.scss',
 })
@@ -23,6 +25,11 @@ export class SalesComponent implements OnInit {
 
   // Checkout modal
   showCheckoutModal = signal(false);
+
+  /** Caixa único aberto (null = sem caixa; undefined = ainda não consultado) */
+  cashRegister = signal<CashRegister | null | undefined>(undefined);
+  /** Aviso "Caixa fechado" só depois de consultar o caixa */
+  noCashRegister = computed(() => this.cashRegister() === null);
 
   // Edit quantity (KG items)
   showEditQuantity = signal(false);
@@ -42,6 +49,7 @@ export class SalesComponent implements OnInit {
     private saleService: SaleService,
     private productService: ProductService,
     private toastService: ToastService,
+    private cashRegisterService: CashRegisterService,
   ) {}
 
   ngOnInit(): void {
@@ -51,6 +59,22 @@ export class SalesComponent implements OnInit {
 
     this.productService.list().subscribe((products) => {
       this.products.set(products);
+    });
+
+    this.loadCashRegister();
+  }
+
+  /** Consulta o caixa compartilhado (200 com null quando não há caixa aberto). */
+  loadCashRegister(onLoaded?: (reg: CashRegister | null) => void): void {
+    this.cashRegisterService.getCurrent().subscribe({
+      next: (reg) => {
+        this.cashRegister.set(reg);
+        onLoaded?.(reg);
+      },
+      error: () => {
+        this.cashRegister.set(null);
+        onLoaded?.(null);
+      },
     });
   }
 
@@ -130,8 +154,15 @@ export class SalesComponent implements OnInit {
 
   // ─── Checkout Modal ─────────────────────────────────────────────────────────
 
+  /** Reconsulta o caixa antes de abrir o checkout; sem caixa, não abre. */
   openCheckout(): void {
-    this.showCheckoutModal.set(true);
+    this.loadCashRegister((reg) => {
+      if (reg) {
+        this.showCheckoutModal.set(true);
+      } else {
+        this.toastService.warning('Caixa fechado — abra o caixa para finalizar vendas');
+      }
+    });
   }
 
   onCheckoutCompleted(): void {
@@ -141,5 +172,13 @@ export class SalesComponent implements OnInit {
 
   onCheckoutCancelled(): void {
     this.showCheckoutModal.set(false);
+  }
+
+  /** Taxa de entrega da venda aberta (Decimal chega como string) */
+  cartDeliveryFee = computed(() => Number(this.currentSale()?.delivery_fee ?? 0));
+
+  /** Detalhes salvos no checkout (ex.: taxa de entrega): mantém o carrinho em sincronia */
+  onCheckoutSaleUpdated(sale: Sale): void {
+    this.currentSale.set(sale);
   }
 }

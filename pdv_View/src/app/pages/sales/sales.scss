@@ -15,7 +15,7 @@
   @media (min-width: 1024px) {
     flex-direction: row;
     gap: 0;
-    height: calc(100dvh - 1%);
+    height: calc(100dvh - var(--space-5));
     margin: 0 calc(-1 * var(--space-8));
     margin-top: calc(-1 * var(--space-5));
   }
@@ -315,5 +315,40 @@
   .label-sm {
     text-transform: uppercase;
     letter-spacing: 0.06em;
+  }
+}
+
+.cart-subtotal {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+// ─── Aviso de caixa fechado ──────────────────────────────────────────────────
+.cash-closed-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--color-error-container);
+  color: var(--color-error);
+
+  span {
+    flex: 1 1 160px;
+    font-weight: 600;
+  }
+
+  &__link {
+    min-height: 36px;
+    padding: var(--space-1) var(--space-4);
+    font-size: 0.875rem;
+    border-color: var(--color-error);
+    color: var(--color-error);
+    text-decoration: none;
   }
 }
