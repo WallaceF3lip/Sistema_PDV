@@ -1,0 +1,78 @@
+<div class="zones">
+  <div class="zones__header">
+    <div>
+      <h2 class="headline-lg">Zonas de Entrega</h2>
+      <p class="body-md text-muted">Bairros ou regiões atendidos e a taxa de entrega de cada um</p>
+    </div>
+    <button class="btn btn-primary" (click)="openModal()">+ Nova Zona</button>
+  </div>
+
+  <div class="zones__filters">
+    <label class="zones__inactive label-sm">
+      <input type="checkbox" [ngModel]="showInactive()" (ngModelChange)="toggleShowInactive($event)" />
+      Mostrar inativas
+    </label>
+  </div>
+
+  <app-data-table [columns]="columns" [data]="zones" [loading]="isLoading"
+    emptyMessage="Nenhuma zona de entrega cadastrada" [paginate]="true" [pageSize]="10">
+
+    <ng-template dtCell="name" let-row>
+      <div class="dt-info">
+        <span class="dt-info__title">{{ row.name }}</span>
+      </div>
+    </ng-template>
+
+    <ng-template dtCell="fee" let-row>
+      <div class="dt-info" style="align-items: flex-end">
+        <span class="dt-info__title text-accent">R$ {{ row.fee | number:'1.2-2' }}</span>
+      </div>
+    </ng-template>
+
+    <ng-template dtCell="is_active" let-row>
+      <span class="badge" [class.badge--success]="row.is_active" [class.badge--muted]="!row.is_active">
+        {{ row.is_active ? 'Ativa' : 'Inativa' }}
+      </span>
+    </ng-template>
+
+    <ng-template dtCell="actions" let-row>
+      <div class="dt-actions">
+        <button class="btn btn-ghost" (click)="editZone(row)">Editar</button>
+        <button class="btn btn-outline" (click)="toggleActive(row)">
+          {{ row.is_active ? 'Desativar' : 'Reativar' }}
+        </button>
+      </div>
+    </ng-template>
+
+  </app-data-table>
+</div>
+
+@if (showModal()) {
+<div class="glass-overlay" (click)="closeModal()">
+  <div class="modal-card zone-modal card animate-scale-in" (click)="$event.stopPropagation()">
+    <h3 class="headline-md">{{ editingZone() ? 'Editar Zona' : 'Nova Zona' }}</h3>
+
+    <form class="modal-form" (ngSubmit)="saveZone()">
+      <div class="form-group">
+        <label class="label-sm text-muted" for="dz-name">NOME</label>
+        <input id="dz-name" class="input-field" [(ngModel)]="form.name" name="name"
+          placeholder="Ex: Centro ou Centro / Vila Nova" required maxlength="100" />
+      </div>
+      <div class="form-group">
+        <label class="label-sm text-muted" for="dz-fee">TAXA DE ENTREGA (R$)</label>
+        <input id="dz-fee" class="input-field" type="number" min="0" max="9999.99" step="0.01"
+          [(ngModel)]="form.fee" name="fee" required />
+      </div>
+      @if (formError()) {
+        <p class="zone-modal__error body-md" role="alert">{{ formError() }}</p>
+      }
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
+        <button type="submit" class="btn btn-primary" [disabled]="isSaving()">
+          {{ isSaving() ? 'Salvando...' : 'Salvar' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+}

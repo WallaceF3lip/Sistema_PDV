@@ -1,0 +1,180 @@
+<div class="customers">
+  <div class="customers__header">
+    <div>
+      <h2 class="headline-lg">Clientes</h2>
+      <p class="body-md text-muted">Cadastro de clientes e endereços de entrega</p>
+    </div>
+    <button class="btn btn-primary" (click)="openModal()">+ Novo Cliente</button>
+  </div>
+
+  <div class="customers__filters">
+    <input class="input-field customers__search" type="search" placeholder="Buscar por nome ou telefone..."
+      [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)" aria-label="Buscar clientes" />
+    <label class="customers__inactive label-sm">
+      <input type="checkbox" [ngModel]="showInactive()" (ngModelChange)="toggleShowInactive($event)" />
+      Mostrar inativos
+    </label>
+  </div>
+
+  <app-data-table [columns]="columns" [data]="filteredCustomers" [loading]="isLoading"
+    emptyMessage="Nenhum cliente encontrado" [paginate]="true" [pageSize]="10">
+
+    <ng-template dtCell="name" let-row>
+      <div class="dt-info">
+        <span class="dt-info__title">{{ row.name }}</span>
+        @if (row.notes) {
+          <span class="dt-info__sub">{{ row.notes }}</span>
+        }
+      </div>
+    </ng-template>
+
+    <ng-template dtCell="phone" let-row>
+      <span>{{ row.phone ? formatPhone(row.phone) : '—' }}</span>
+    </ng-template>
+
+    <ng-template dtCell="neighborhood" let-row>
+      <span>{{ defaultNeighborhood(row) }}</span>
+    </ng-template>
+
+    <ng-template dtCell="is_active" let-row>
+      <span class="badge" [class.badge--success]="row.is_active" [class.badge--muted]="!row.is_active">
+        {{ row.is_active ? 'Ativo' : 'Inativo' }}
+      </span>
+    </ng-template>
+
+    <ng-template dtCell="actions" let-row>
+      <div class="dt-actions">
+        <button class="btn btn-ghost" (click)="editCustomer(row)">Editar</button>
+        @if (authService.isAdmin()) {
+          <button class="btn btn-outline" (click)="toggleActive(row)">
+            {{ row.is_active ? 'Desativar' : 'Reativar' }}
+          </button>
+        }
+      </div>
+    </ng-template>
+
+  </app-data-table>
+</div>
+
+@if (showModal()) {
+<div class="glass-overlay" (click)="closeModal()">
+  <div class="modal-card customer-modal card animate-scale-in" (click)="$event.stopPropagation()">
+    <h3 class="headline-md">{{ editingCustomer() ? 'Editar Cliente' : 'Novo Cliente' }}</h3>
+
+    <form class="modal-form" (ngSubmit)="saveCustomer()">
+      <div class="form-group">
+        <label class="label-sm text-muted" for="cu-name">NOME</label>
+        <input id="cu-name" class="input-field" [(ngModel)]="form.name" name="name" placeholder="Nome do cliente"
+          required maxlength="255" />
+      </div>
+      <div class="form-group">
+        <label class="label-sm text-muted" for="cu-phone">TELEFONE</label>
+        <input id="cu-phone" class="input-field" type="tel" [(ngModel)]="form.phone" name="phone"
+          placeholder="(00) 00000-0000" mask="(00) 0000-0000||(00) 00000-0000" />
+      </div>
+      <div class="form-group">
+        <label class="label-sm text-muted" for="cu-notes">OBSERVAÇÃO</label>
+        <textarea id="cu-notes" class="input-field customer-modal__notes" [(ngModel)]="form.notes" name="notes"
+          rows="2" maxlength="500" placeholder="Preferências, referências..."></textarea>
+      </div>
+
+      <!-- Endereços -->
+      <div class="address-list">
+        <div class="address-list__header">
+          <span class="label-sm text-muted">ENDEREÇOS</span>
+          @if (!addressForm) {
+            <button type="button" class="btn btn-ghost address-list__add" (click)="newAddress()">+ Endereço</button>
+          }
+        </div>
+
+        @for (addr of addresses(); track $index; let i = $index) {
+          <div class="address-item" [class.address-item--default]="addr.is_default">
+            <div class="address-item__text">
+              <span>{{ formatAddress(addr) }}</span>
+              @if (addr.delivery_zone) {
+                <span class="badge badge--muted">{{ addr.delivery_zone.name }}</span>
+              }
+              @if (addr.is_default) {
+                <span class="badge badge--success">Padrão</span>
+              }
+            </div>
+            <div class="address-item__actions">
+              @if (!addr.is_default) {
+                <button type="button" class="link-btn" (click)="setDefaultAddress(i)">Tornar padrão</button>
+              }
+              <button type="button" class="link-btn" (click)="editAddress(i)">Editar</button>
+              <button type="button" class="link-btn link-btn--danger" (click)="removeAddress(i)">Remover</button>
+            </div>
+          </div>
+        } @empty {
+          @if (!addressForm) {
+            <p class="body-md text-muted address-list__empty">Nenhum endereço cadastrado.</p>
+          }
+        }
+
+        @if (addressForm) {
+          <div class="address-form">
+            <div class="form-group">
+              <label class="label-sm text-muted" for="ad-street">RUA *</label>
+              <input id="ad-street" class="input-field" [(ngModel)]="addressForm.street" name="ad_street"
+                maxlength="255" placeholder="Rua / Avenida" />
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="label-sm text-muted" for="ad-number">NÚMERO</label>
+                <input id="ad-number" class="input-field" [(ngModel)]="addressForm.number" name="ad_number"
+                  maxlength="20" />
+              </div>
+              <div class="form-group">
+                <label class="label-sm text-muted" for="ad-complement">COMPLEMENTO</label>
+                <input id="ad-complement" class="input-field" [(ngModel)]="addressForm.complement"
+                  name="ad_complement" maxlength="100" placeholder="Apto, bloco..." />
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="label-sm text-muted" for="ad-neighborhood">BAIRRO *</label>
+              <input id="ad-neighborhood" class="input-field" [ngModel]="addressForm.neighborhood"
+                (ngModelChange)="onNeighborhoodChange($event)" name="ad_neighborhood" maxlength="100" />
+            </div>
+            <div class="form-group">
+              <label class="label-sm text-muted" for="ad-zone">ZONA DE ENTREGA</label>
+              <select id="ad-zone" class="input-field" [ngModel]="addressForm.delivery_zone_id"
+                (ngModelChange)="onZoneChange($event)" name="ad_zone">
+                <option [ngValue]="null">Sem zona</option>
+                @for (zone of zones(); track zone.id) {
+                  <option [ngValue]="zone.id">{{ zone.name }} — R$ {{ zone.fee | number:'1.2-2' }}</option>
+                }
+                @if (inactiveCurrentZone(); as inactive) {
+                  <option [ngValue]="inactive.id">{{ inactive.name }} (inativa)</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="label-sm text-muted" for="ad-reference">REFERÊNCIA</label>
+              <input id="ad-reference" class="input-field" [(ngModel)]="addressForm.reference" name="ad_reference"
+                maxlength="255" placeholder="Próximo a..." />
+            </div>
+            <label class="address-form__default label-sm">
+              <input type="checkbox" [(ngModel)]="addressForm.is_default" name="ad_default" />
+              Endereço padrão
+            </label>
+            <div class="address-form__actions">
+              <button type="button" class="btn btn-secondary" (click)="cancelAddressForm()">Cancelar</button>
+              <button type="button" class="btn btn-primary" [disabled]="isSavingAddress()" (click)="saveAddress()">
+                {{ isSavingAddress() ? 'Salvando...' : 'Salvar endereço' }}
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
+        <button type="submit" class="btn btn-primary" [disabled]="isSaving()">
+          {{ isSaving() ? 'Salvando...' : 'Salvar' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+}

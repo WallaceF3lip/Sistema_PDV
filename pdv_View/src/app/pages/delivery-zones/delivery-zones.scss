@@ -1,0 +1,39 @@
+.zones {
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-bottom: var(--space-5);
+    flex-wrap: wrap;
+  }
+
+  &__filters {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin-bottom: var(--space-5);
+    flex-wrap: wrap;
+  }
+
+  &__inactive {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    cursor: pointer;
+    color: var(--color-secondary);
+  }
+}
+
+.zone-modal {
+  max-width: min(440px, calc(100vw - 2rem));
+
+  .input-field {
+    padding-left: var(--space-3);
+  }
+
+  &__error {
+    color: var(--color-error);
+    margin: 0;
+  }
+}
